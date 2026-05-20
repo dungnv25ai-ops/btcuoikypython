@@ -29,6 +29,8 @@ class Menu:
     def update(self):
         # Tạo lại font khi cửa sổ thay đổi kích thước
         self._tao_font()
+        if hasattr(self, 'am_thanh'):
+            self.am_thanh.choi_nhac("menu")
 
     def ve(self):
         w, h = self.man_hinh.get_size()
@@ -92,11 +94,15 @@ class Menu:
                 self.muc_dang_chon = (self.muc_dang_chon + 1) % len(self.cac_muc)
             if su_kien.key == pygame.K_RETURN:
                 return self.cac_muc[self.muc_dang_chon][1]
+            if hasattr(self, 'am_thanh'):
+                self.am_thanh.phat_click()
 
         # Click chuột
         if su_kien.type == pygame.MOUSEBUTTONDOWN and su_kien.button == 1:
             for i, r in enumerate(self.cac_rect_nut):
                 if r.collidepoint(su_kien.pos):
+                    if hasattr(self, 'am_thanh'):
+                        self.am_thanh.phat_click()
                     return self.cac_muc[i][1]
 
         return TRANG_THAI_MENU

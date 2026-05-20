@@ -98,16 +98,23 @@ def _ve_ke():
     return s
 
 class KeDiChuyen(pygame.sprite.Sprite):
-    """Kẻ 1x1: đẩy + kill người chơi khi chạm. Chuột trái để diệt (cần kiếm)."""
+    """Kẻ 1x1: đẩy + kill người chơi khi chạm. Chuột trái để diệt (cần kiếm).
+    Màn 6-9: thêm skill bắn khối 1x1 vào player, hồi chiêu 10s."""
     TOC_DO       = 1.5
-    PHAM_VI_DAY  = TILE_SIZE * 1    # vùng đẩy
-    PHAM_VI_DIET = TILE_SIZE * 2    # vùng diệt
-    LUC_DAY      = 12               # lực đẩy ra
-    I_FRAMES     = 40               # frame bất tử sau khi bị đẩy
+    PHAM_VI_DAY  = TILE_SIZE * 1
+    PHAM_VI_DIET = TILE_SIZE * 2
+    LUC_DAY      = 12
+    I_FRAMES     = 40
 
-    def __init__(self, cot, hang, bien_gioi_trai, bien_gioi_phai):
+    # Skill bắn
+    TAM_DANH     = 10 * TILE_SIZE   # 10 tile tầm phát hiện
+    TU_LUC_TIME  = 5 * 60           # 5s tụ lực
+    HOI_CHIEU    = 10 * 60          # 10s hồi chiêu
+
+    def __init__(self, cot, hang, bien_gioi_trai, bien_gioi_phai, co_tan_cong=False):
         super().__init__()
-        self.image    = _ve_ke()
+        self._surf_goc = _ve_ke()
+        self.image    = self._surf_goc.copy()
         self.rect     = self.image.get_rect(topleft=(cot*TILE_SIZE, hang*TILE_SIZE))
         self._x       = float(self.rect.x)
         self.vel_x    = self.TOC_DO
@@ -116,6 +123,14 @@ class KeDiChuyen(pygame.sprite.Sprite):
         self.dem      = 0
         self._bien_mat= False
         self._alpha   = 255
+        # Skill
+        self.co_tan_cong = co_tan_cong
+        self._sk_cd      = self.HOI_CHIEU // 2   # bắt đầu sau 5s
+        self._sk_phase   = 0    # 0=sẵn sàng, 1=tụ lực, 2=đã bắn/chờ hồi
+        self._tu_luc_dem = 0
+        self._huong_tc   = 1    # hướng sau khi tấn công xong
+        # Khối đạn đang bay
+        self._dan        = None  # KhoiDan instance hoặc None
 
     def gan_nguoi_choi(self, player_rect):
         return self.rect.inflate(self.PHAM_VI_DIET*2, self.PHAM_VI_DIET*2)\
@@ -136,62 +151,147 @@ class KeDiChuyen(pygame.sprite.Sprite):
     def bat_dau_bien_mat(self):
         self._bien_mat = True
 
-    # ---- CHÚ Ý: Thêm tham số ds_nen_tang vào hàm update ----
-    def update(self, ds_nen_tang):
+    def update(self, ds_nen_tang, player_rect=None):
         self.dem += 1
-        
-        # Xử lý hiệu ứng biến mất khi bị giết
+
         if self._bien_mat:
             self._alpha = max(0, self._alpha - 20)
             self.image.set_alpha(self._alpha)
             if self._alpha <= 0: self.kill()
             return
-            
-        # 1. Di chuyển
-        self._x += self.vel_x
-        self.rect.x = int(self._x)
 
-        # 2. Kiểm tra ĐỤNG TƯỜNG (cục gạch)
-        dung_tuong = False
-        for n in ds_nen_tang:
-            if self.rect.colliderect(n.rect):
-                dung_tuong = True
-                if self.vel_x > 0:
-                    self.rect.right = n.rect.left
-                elif self.vel_x < 0:
-                    self.rect.left = n.rect.right
-                self._x = float(self.rect.x) # Ép lại tọa độ float
-                break
+        # ── Cập nhật đạn bay ──────────────────────────────
+        if self._dan is not None:
+            self._dan.update(ds_nen_tang)
+            if not self._dan.alive():
+                self._dan = None
 
-        # 3. Kiểm tra VỰC THẲM (Cảm biến dưới mũi chân)
-        co_dat_do = False
-        if self.vel_x > 0:
-            rect_cam_bien = pygame.Rect(self.rect.right + 2, self.rect.bottom + 2, 2, 2)
-        else:
-            rect_cam_bien = pygame.Rect(self.rect.left - 4, self.rect.bottom + 2, 2, 2)
+        # ── Skill tấn công ────────────────────────────────
+        dang_tan_cong = False
+        if self.co_tan_cong and player_rect is not None:
+            if self._sk_phase == 0:
+                # Hồi chiêu
+                if self._sk_cd > 0:
+                    self._sk_cd -= 1
+                else:
+                    # Kiểm tra tầm
+                    dx = player_rect.centerx - self.rect.centerx
+                    dy = player_rect.centery - self.rect.centery
+                    if abs(dx) <= self.TAM_DANH and abs(dy) <= self.TAM_DANH:
+                        # Bắt đầu tụ lực
+                        self._sk_phase   = 1
+                        self._tu_luc_dem = 0
+                        self._huong_tc   = 1 if dx >= 0 else -1
 
-        for n in ds_nen_tang:
-            if rect_cam_bien.colliderect(n.rect):
-                co_dat_do = True
-                break
+            elif self._sk_phase == 1:
+                # Đang tụ lực 5s — dừng di chuyển, hướng về player
+                dang_tan_cong = True
+                self._tu_luc_dem += 1
+                if player_rect:
+                    self._huong_tc = 1 if player_rect.centerx >= self.rect.centerx else -1
+                # Flash nhấp nháy khi tụ lực
+                a = int(160 + 95*abs(math.sin(self._tu_luc_dem * 0.25)))
+                f = self._surf_goc.copy()
+                f.fill((120, 0, 0, 60), special_flags=pygame.BLEND_RGBA_ADD)
+                f.set_alpha(a)
+                self.image = f
+                if self._tu_luc_dem >= self.TU_LUC_TIME:
+                    # Bắn khối
+                    bx = self.rect.centerx
+                    by = self.rect.top - TILE_SIZE
+                    px = player_rect.centerx if player_rect else bx + self._huong_tc*100
+                    py = player_rect.centery if player_rect else by
+                    self._dan       = _KhoiDan(bx, by, px, py)
+                    self._sk_phase  = 2
+                    self._sk_cd     = self.HOI_CHIEU
+                    self.vel_x      = self.TOC_DO * self._huong_tc
 
-        # 4. XỬ LÝ QUAY ĐẦU (Nếu đụng tường, đụng vực, hoặc vượt quá biên cũ)
-        if dung_tuong or not co_dat_do or self._x <= self.b_trai or self._x >= self.b_phai - self.rect.width:
-            self.vel_x *= -1 # Đảo hướng
-            
-            # Khóa chặt trong biên b_trai/b_phai cũ đề phòng bị kẹt
-            if self._x <= self.b_trai:
-                self._x = float(self.b_trai)
-                self.vel_x = abs(self.TOC_DO)
-            elif self._x >= self.b_phai - self.rect.width:
-                self._x = float(self.b_phai - self.rect.width)
-                self.vel_x = -abs(self.TOC_DO)
-                
+            elif self._sk_phase == 2:
+                # Chờ hồi chiêu
+                self._sk_cd -= 1
+                if self._sk_cd <= 0:
+                    self._sk_phase = 0
+                    self._sk_cd    = 0
+
+        # ── Di chuyển (dừng khi tụ lực) ──────────────────
+        if not dang_tan_cong:
+            self._x += self.vel_x
             self.rect.x = int(self._x)
 
-        # 5. Hiệu ứng nhấp nháy sáng (Code gốc của bạn)
-        a = int(200+55*math.sin(self.dem*0.1))
-        self.image.set_alpha(a)
+            dung_tuong = False
+            for n in ds_nen_tang:
+                if self.rect.colliderect(n.rect):
+                    dung_tuong = True
+                    if self.vel_x > 0:  self.rect.right = n.rect.left
+                    elif self.vel_x<0:  self.rect.left  = n.rect.right
+                    self._x = float(self.rect.x)
+                    break
+
+            co_dat_do = False
+            if self.vel_x > 0:
+                rc = pygame.Rect(self.rect.right+2, self.rect.bottom+2, 2, 2)
+            else:
+                rc = pygame.Rect(self.rect.left-4,  self.rect.bottom+2, 2, 2)
+            for n in ds_nen_tang:
+                if rc.colliderect(n.rect):
+                    co_dat_do = True; break
+
+            if dung_tuong or not co_dat_do \
+                    or self._x <= self.b_trai \
+                    or self._x >= self.b_phai - self.rect.width:
+                self.vel_x *= -1
+                if self._x <= self.b_trai:
+                    self._x = float(self.b_trai); self.vel_x = abs(self.TOC_DO)
+                elif self._x >= self.b_phai - self.rect.width:
+                    self._x = float(self.b_phai-self.rect.width)
+                    self.vel_x = -abs(self.TOC_DO)
+                self.rect.x = int(self._x)
+
+            if self._sk_phase != 1:
+                a = int(200+55*math.sin(self.dem*0.1))
+                self.image = self._surf_goc.copy()
+                self.image.set_alpha(a)
+
+
+class _KhoiDan(pygame.sprite.Sprite):
+    """Khối đạn 1x1 bay từ trên đầu quái thẳng tới player."""
+    TOC_DO = 6
+
+    def __init__(self, x, y, tx, ty):
+        super().__init__()
+        T = TILE_SIZE
+        s = pygame.Surface((T, T), pygame.SRCALPHA)
+        pygame.draw.rect(s, (220, 60, 60, 220), (0,0,T,T), border_radius=6)
+        pygame.draw.rect(s, (255,100,100,200), (2,2,T-4,T//3), border_radius=4)
+        pygame.draw.rect(s, (255,50,50,255), (0,0,T,T), 2, border_radius=6)
+        self.image = s
+        self.rect  = self.image.get_rect(center=(x, y))
+        self._x    = float(x); self._y = float(y)
+        dx = tx - x; dy = ty - y
+        dist = max(1, (dx**2+dy**2)**0.5)
+        self._vx = dx/dist * self.TOC_DO
+        self._vy = dy/dist * self.TOC_DO
+        self._dem = 0
+        self._alive = True
+        self.add(pygame.sprite.Group())   # cần group để alive() hoạt động
+
+    def alive(self):
+        return self._alive
+
+    def update(self, ds_nen=None):
+        if not self._alive: return
+        self._dem += 1
+        self._x += self._vx; self._y += self._vy
+        self.rect.center = (int(self._x), int(self._y))
+        if ds_nen:
+            for n in ds_nen:
+                if self.rect.colliderect(n.rect):
+                    self._alive = False; return
+        if self._dem > 8*60: self._alive = False
+
+    def cham_nguoi(self, player_rect):
+        if not self._alive: return False
+        return self.rect.colliderect(player_rect)
 
 
 # ══════════════════════════════════════════════════════════
@@ -544,15 +644,7 @@ class KhoiRoi(pygame.sprite.Sprite):
         self._bien_mat_t = 0
 
     def update(self, ds_nen):
-        if self._bien_mat:
-            # Biến mất sau khi giết player
-            self._bien_mat_t += 1
-            if self._bien_mat_t > 30:
-                self.image.set_alpha(max(0, 255-self._bien_mat_t*8))
-            if self._bien_mat_t > 62:
-                self.kill()
-            return
-
+    
         self._dem += 1
 
         # Chờ delay rồi mới rơi
@@ -614,6 +706,52 @@ def _ve_qua_cau(r=14):
     pygame.draw.circle(s,(255,60,60,255),(S//2,S//2),r,2)
     return s
 
+# ══════════════════════════════════════════════════════════
+#  KHỐI NƯỚC — 1x1, ký hiệu '~', cơ chế bình thường
+#  Vào nước: giảm tốc, trọng lực nhẹ, nhảy = bơi lên
+#  Không leo tường, không dash trong nước
+# ══════════════════════════════════════════════════════════
+def _ve_nuoc(dem=0):
+    S = TILE_SIZE
+    s = pygame.Surface((S, S), pygame.SRCALPHA)
+    # Nền nước xanh trong suốt
+    pygame.draw.rect(s, (30, 100, 200, 160), (0, 0, S, S))
+    pygame.draw.rect(s, (60, 140, 230, 180), (0, 0, S, S//3))
+    # Sóng nhỏ động (dùng dem để animate)
+    import math as _m
+    for i in range(3):
+        ox = int(6 * _m.sin(dem * 0.04 + i * 2.1))
+        x0 = (i * S // 3 + ox) % S
+        y0 = S // 5 + i * (S // 7)
+        pygame.draw.arc(s, (120, 190, 255, 200),
+                        pygame.Rect(x0 - 8, y0 - 4, 16, 8),
+                        0, _m.pi, 2)
+    # Bong bóng ngẫu nhiên (cố định theo seed)
+    for bx, by in [(8, 30), (32, 20), (20, 40)]:
+        pygame.draw.circle(s, (180, 220, 255, 120), (bx, by), 3)
+        pygame.draw.circle(s, (220, 240, 255, 200), (bx, by), 3, 1)
+    # Viền trên sáng
+    pygame.draw.line(s, (100, 180, 255, 255), (0, 0), (S, 0), 2)
+    return s
+
+class KhoiNuoc(pygame.sprite.Sprite):
+    """Khối nước 1x1 — đứng trong = giảm tốc, bơi lên bằng Space/W."""
+    def __init__(self, cot, hang):
+        super().__init__()
+        self._dem   = 0
+        self._cot   = cot
+        self._hang  = hang
+        self.image  = _ve_nuoc(0)
+        self.rect   = self.image.get_rect(
+            topleft=(cot * TILE_SIZE, hang * TILE_SIZE))
+
+    def update(self):
+        self._dem += 1
+        # Vẽ lại với frame mới để animate sóng
+        if self._dem % 4 == 0:
+            self.image = _ve_nuoc(self._dem)
+
+
 class QuaCau(pygame.sprite.Sprite):
     """Quả cầu bắn thẳng từ boss đến player."""
     TOC_DO = 5
@@ -629,12 +767,174 @@ class QuaCau(pygame.sprite.Sprite):
         self._vy = dy/dist*self.TOC_DO
         self._dem = 0
 
-    def update(self):
+    def update(self, ds_nen=None):
         self._dem += 1
         self._x += self._vx; self._y += self._vy
         self.rect.center = (int(self._x), int(self._y))
-        # Tự xóa sau 5s
-        if self._dem > 300: self.kill()
+        # Chỉ mất khi chạm tường
+        if ds_nen:
+            for n in ds_nen:
+                if self.rect.colliderect(n.rect):
+                    self.kill(); return
 
     def cham_nguoi(self, player_rect):
         return self.rect.colliderect(player_rect)
+
+
+# ── Kiếm bay (Skill 3 boss10) ─────────────────────────────
+def _ve_kiem_bay(w, h, phase):
+    s = pygame.Surface((w, h), pygame.SRCALPHA)
+    # Thân kiếm
+    pygame.draw.rect(s, (255,220,50), (0, 0, w, h), border_radius=4)
+    pygame.draw.rect(s, (255,245,120), (2, 2, w-4, h//3), border_radius=3)
+    # Lưỡi
+    if h > w:  # dọc
+        pygame.draw.rect(s, (200,230,255), (w//2-3, 2, 6, h-12))
+        pygame.draw.rect(s, (230,240,255), (w//2-1, 2, 3, h-12))
+        pygame.draw.polygon(s, (220,235,255), [(w//2-5,h-14),(w//2+5,h-14),(w//2,h-2)])
+    else:  # ngang
+        pygame.draw.rect(s, (200,230,255), (2, h//2-3, w-12, 6))
+        pygame.draw.polygon(s, (220,235,255), [(w-14,h//2-5),(w-14,h//2+5),(w-2,h//2)])
+    # Guard
+    if h > w:
+        pygame.draw.rect(s, (200,160,40), (0, h//2-4, w, 8), border_radius=3)
+    else:
+        pygame.draw.rect(s, (200,160,40), (w//2-4, 0, 8, h), border_radius=3)
+    # Glow phase2
+    if phase == 2:
+        pygame.draw.rect(s, (255,100,50,120), (0,0,w,h), 3, border_radius=4)
+    pygame.draw.rect(s, (180,130,0), (0,0,w,h), 2, border_radius=4)
+    return s
+
+
+class KiemBay(pygame.sprite.Sprite):
+    """Kiếm bay từ boss10 skill3 — lướt thẳng, dính tường thì hết."""
+    def __init__(self, x, y, dx, dy, phase=1):
+        super().__init__()
+        T = TILE_SIZE
+        # Phase1: 1x2, Phase2: 1x3
+        if dy != 0:  # dọc
+            w = T; h = T*2 if phase==1 else T*3
+        else:        # ngang
+            w = T*2 if phase==1 else T*3; h = T
+        self.image = _ve_kiem_bay(w, h, phase)
+        self.rect  = self.image.get_rect(center=(x, y))
+        self._x    = float(x); self._y = float(y)
+        spd = 8 if phase==1 else 13
+        # Chuẩn hóa hướng (4 chiều)
+        if abs(dx) >= abs(dy):
+            self._vx = spd if dx>0 else -spd; self._vy = 0
+        else:
+            self._vx = 0; self._vy = spd if dy>0 else -spd
+        self._dem = 0
+
+    def update(self, ds_nen=None):
+        self._dem += 1
+        self._x += self._vx; self._y += self._vy
+        self.rect.center = (int(self._x), int(self._y))
+        # Dính tường → hết
+        if ds_nen:
+            for n in ds_nen:
+                if self.rect.colliderect(n.rect):
+                    self.kill(); return
+        # Tự xóa sau 3s
+        if self._dem > 180: self.kill()
+
+    def cham_nguoi(self, player_rect):
+        return self.rect.colliderect(player_rect)
+
+
+# ── Kiếm mưa (SK4 boss10) ─────────────────────────────────
+class KiemMua(pygame.sprite.Sprite):
+    """Kiếm 1×2 từ boss, bay thẳng theo hướng đã định khi spawn.
+    Sau khi chạm tường/sàn: hiện 1s rồi biến mất (có thể nhặt)."""
+    def __init__(self, x, y, phase=1):
+        super().__init__()
+        T = TILE_SIZE
+        self.image = _ve_kiem_bay(T, T*2, phase)
+        self._surf_goc = self.image.copy()
+        self.rect  = self.image.get_rect(midtop=(x, y))
+        self._x    = float(x)
+        self._y    = float(y)
+        self._vx   = 0.0
+        self._vy   = 0.0
+        self._spd  = 7 if phase == 1 else 11
+        self._dem  = 0
+        self._cham = False
+        self._cham_dem = 0
+        self.HIEN_SAU_CHAM = 60
+
+    def dat_huong(self, tx, ty):
+        """Gọi 1 lần sau khi tạo để set hướng bay thẳng về target."""
+        dx = tx - self._x
+        dy = ty - self._y
+        dist = max(1, (dx**2 + dy**2)**0.5)
+        self._vx = dx / dist * self._spd
+        self._vy = dy / dist * self._spd
+
+    def update(self, ds_nen=None):
+        self._dem += 1
+        if self._cham:
+            self._cham_dem += 1
+            alpha = int(255 * (1.0 - self._cham_dem / self.HIEN_SAU_CHAM))
+            self.image = self._surf_goc.copy()
+            self.image.set_alpha(max(0, alpha))
+            if self._cham_dem >= self.HIEN_SAU_CHAM:
+                self.kill()
+            return
+        self._x += self._vx
+        self._y += self._vy
+        self.rect.center = (int(self._x), int(self._y))
+        if ds_nen:
+            for n in ds_nen:
+                if self.rect.colliderect(n.rect):
+                    self._cham = True
+                    self._vx = self._vy = 0.0
+                    return
+        if self._dem > 10 * 60: self.kill()
+
+    def cham_nguoi(self, player_rect):
+        if self._cham: return False
+        return self.rect.colliderect(player_rect)
+
+    def co_the_nhat(self, player_rect):
+        """Chỉ nhặt được khi đã chạm sàn (_cham=True)."""
+        if not self._cham:
+            return False
+        return self.rect.inflate(8, 8).colliderect(player_rect)
+
+
+# ── Kiếm ném (skill F người chơi) ─────────────────────────
+class KiemNem(pygame.sprite.Sprite):
+    """Kiếm ném thẳng theo hướng nhân vật, dính tường thì hết."""
+    TOC_DO = 14
+
+    def __init__(self, x, y, huong):
+        super().__init__()
+        T = TILE_SIZE
+        # Ngang theo hướng ném
+        w = T * 2; h = T
+        self.image = _ve_kiem_bay(w, h, phase=2)
+        if huong < 0:
+            self.image = pygame.transform.flip(self.image, True, False)
+        self.rect  = self.image.get_rect(center=(x, y))
+        self._x    = float(x)
+        self._y    = float(y)
+        self._vx   = float(self.TOC_DO * huong)
+        self._dem  = 0
+
+    def update(self, ds_nen=None):
+        self._dem += 1
+        self._x += self._vx
+        self.rect.centerx = int(self._x)
+        if ds_nen:
+            for n in ds_nen:
+                if self.rect.colliderect(n.rect):
+                    self.kill(); return
+        if self._dem > 6 * 60: self.kill()   # timeout 6s
+
+    def cham_nguoi(self, r):
+        return self.rect.colliderect(r)
+
+    def cham_boss(self, boss_rect):
+        return self.rect.colliderect(boss_rect)

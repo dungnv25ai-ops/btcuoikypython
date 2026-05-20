@@ -81,7 +81,7 @@ class Boss5(pygame.sprite.Sprite):
 
 class Boss10(pygame.sprite.Sprite):
     """Boss màn 10 — tụ lực + bắn cầu. 5 HP, kill trong 60s thắng."""
-    SO_MAU_MAX  = 5
+    SO_MAU_MAX  = 10
     TU_LUC_TIME = 90    # 1.5s tụ lực
     BAN_COOLDOWN= 120   # 2s giữa các lần bắn
 

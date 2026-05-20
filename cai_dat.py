@@ -1,6 +1,6 @@
 # cai_dat.py
 SCREEN_W = 900; SCREEN_H = 550; FPS = 60
-TEN_GAME  = "Puzzle Mario - Phiêu Lưu Ký"
+TEN_GAME  = "LOST IN TIME - Quá Khử Lãng Quên"
 TILE_SIZE = 48
 
 # Vật lý — nhảy đúng 2 tile (96px)

@@ -20,6 +20,32 @@ def _get():
     return _SPRITE
 
 
+def _di_chuyen_khong_xuyen(x, y, mx, my, size, ds_nen):
+    """Di chuyển (mx,my) có collision trượt — dùng chung cho tinh linh."""
+    if not ds_nen:
+        return x + mx, y + my
+
+    # Ngang trước
+    nx = x + mx
+    r  = pygame.Rect(int(nx), int(y), size, size)
+    for n in ds_nen:
+        if r.colliderect(n.rect):
+            if mx > 0: nx = float(n.rect.left - size)
+            elif mx < 0: nx = float(n.rect.right)
+            mx = 0; break
+
+    # Dọc sau
+    ny = y + my
+    r  = pygame.Rect(int(nx), int(ny), size, size)
+    for n in ds_nen:
+        if r.colliderect(n.rect):
+            if my > 0: ny = float(n.rect.top - size)
+            elif my < 0: ny = float(n.rect.bottom)
+            my = 0; break
+
+    return nx, ny
+
+
 class TinhLinh:
     def __init__(self):
         self.x = self.y = 0.0
@@ -90,7 +116,7 @@ class TinhLinh:
         self.la_platform    = False
 
     # ── Update ───────────────────────────────────────────
-    def update(self, player_rect):
+    def update(self, player_rect, ds_nen=None):
         if not self.hien: return
         self.dem += 1; self.quy_dao += 0.025
 
@@ -106,26 +132,29 @@ class TinhLinh:
             dy = self._dich_y - self.y
             dist = math.hypot(dx, dy)
             if dist < 6:
-                self.x, self.y     = self._dich_x, self._dich_y
+                self.x, self.y       = self._dich_x, self._dich_y
                 self._dang_di_chuyen = False
-                self.la_platform   = True
+                self.la_platform     = True
                 self._thoi_gian_dung = time.time()
             else:
                 spd = min(14, max(4, dist*0.18))
-                self.x += dx/dist*spd
-                self.y += dy/dist*spd
+                mx  = dx/dist*spd
+                my  = dy/dist*spd
+                self.x, self.y = _di_chuyen_khong_xuyen(
+                    self.x, self.y, mx, my, S, ds_nen)
 
         elif self.la_platform:
-            # Hết 10s → quay về quanh nhân vật
             if time.time() - self._thoi_gian_dung >= self.PLATFORM_TIME:
                 self.la_platform = False
 
         else:
-            # Bay quanh nhân vật
+            # Bay quanh nhân vật — áp trượt nhẹ
             cx = player_rect.centerx + math.cos(self.quy_dao)*55
             cy = player_rect.top - 12 + math.sin(self.quy_dao*1.3)*16
-            self.x += (cx-self.x)*0.06
-            self.y += (cy-self.y)*0.06
+            mx = (cx-self.x)*0.06
+            my = (cy-self.y)*0.06
+            self.x, self.y = _di_chuyen_khong_xuyen(
+                self.x, self.y, mx, my, S, ds_nen)
 
     def ve(self, screen, cam_x, cam_y, mw, mh):
         if not self.hien: return

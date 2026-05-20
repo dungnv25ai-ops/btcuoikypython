@@ -1,11 +1,11 @@
-# 🎮 Puzzle Mario - Phiêu Lưu Ký
+#  LOST IN TIME - Quá Khử Lãng Quên
 
 Game 2D puzzle kiểu Mario làm bằng Python + Pygame.
 
 ## Cài đặt & Chạy
 
 ```bash
-# 1. Cài Pygame (chỉ cần làm 1 lần)
+# 1. Cài Pygame 
 pip install pygame
 
 # 2. Chạy game

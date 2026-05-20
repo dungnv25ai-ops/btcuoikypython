@@ -58,6 +58,13 @@ class NhanVat(pygame.sprite.Sprite):
         self.co_the_leo_phai = False
         self.co_the_leo_trai = False
 
+        # Nước
+        self.trong_nuoc = False
+
+        # Kiếm nhặt được
+        self.so_kiem     = 0     # số lần dùng skill ném còn lại
+        self._nem_signal = False  # True khi vừa nhấn F (man_choi đọc 1 lần)
+
     def khoa(self, v): self._khoa = v
 
     @property
@@ -93,8 +100,21 @@ class NhanVat(pygame.sprite.Sprite):
             if muon_trai: self.huong = -1
             return
 
+        # ── TRONG NƯỚC: cơ chế bơi ───────────────────────
+        if self.trong_nuoc:
+            self._leo_huong = 0   # không leo tường trong nước
+            self.vel_x = 0
+            if muon_trai: self.vel_x = -int(TOC_DO_CHAY * 0.55); self.huong = -1
+            if muon_phai: self.vel_x =  int(TOC_DO_CHAY * 0.55); self.huong =  1
+            # Space/W/↑ = bơi lên
+            if p[pygame.K_SPACE] or p[pygame.K_UP] or p[pygame.K_w]:
+                self.vel_y = -4
+            return   # không dash, không nhảy bình thường
+
         # ── Leo tường: giữ chuột + D/A ────────────────────
-        if chuot_giu and (muon_phai or muon_trai):
+                # ── Leo tường: giữ W hoặc Space + D/A ────────────
+        muon_leo = p[pygame.K_w] or p[pygame.K_SPACE]
+        if muon_leo and (muon_phai or muon_trai):
             sang_phai = muon_phai
             self.huong = 1 if sang_phai else -1
             if self._co_khoi_canh(ds, sang_phai):
@@ -122,13 +142,29 @@ class NhanVat(pygame.sprite.Sprite):
             self._dash_cd     = self.DASH_COOLDOWN
             self.vel_y        = 0
 
+        # ── Ném kiếm F ────────────────────────────────────
+        self._nem_signal = False
+        if self.so_kiem > 0 and p[pygame.K_f] and not hasattr(self, '_f_held'):
+            self._nem_signal = True
+            self.so_kiem -= 1
+        # Chống giữ phím
+        if p[pygame.K_f]:
+            self._f_held = True
+        else:
+            if hasattr(self, '_f_held'):
+                del self._f_held
+
     TOC_LEO = 4
 
     # ── Trọng lực ─────────────────────────────────────────
     def ap_trong_luc(self):
         if self.dang_leo:  return   # leo tường: không rơi
         if self.dang_dash: return   # đang dash: không rơi
-        self.vel_y = min(self.vel_y + TRONG_LUC, 18)
+        if self.trong_nuoc:
+            # Trọng lực nhẹ trong nước, vel_y tối đa 3 (float)
+            self.vel_y = min(self.vel_y + TRONG_LUC * 0.3, 3)
+        else:
+            self.vel_y = min(self.vel_y + TRONG_LUC, 18)
 
     # ── Di chuyển + collision ──────────────────────────────
     def di_chuyen(self, ds):
