@@ -1,5 +1,6 @@
 # tien_ich/hud.py — HUD: trái tim + ngôi sao
-import pygame, math
+import pygame
+import math, math
 from cai_dat import *
 
 def _ve_trai_tim(r=14, day=False):
@@ -44,7 +45,7 @@ def _get_sprites():
 
 
 class HUD:
-    SO_TIM = 3
+    SO_TIM = 5
     SO_SAO = 3
 
     def __init__(self):
@@ -68,12 +69,11 @@ class HUD:
         w, h = screen.get_size()
         tt_day,tt_trong,sao_day,sao_trong = _get_sprites()
         self._dem_nhip += 1
-
         IW = tt_day.get_width()
         SW = sao_day.get_width()
-        PAD = 8
+        PAD = 10
 
-        # ── Trái tim bên TRÁI ────────────────────────────
+        # ── Trái tim góc TRÊN TRÁI ───────────────────────
         for i in range(self.SO_TIM):
             img = tt_day if i < self.tim else tt_trong
             y_off = 0
@@ -81,23 +81,29 @@ class HUD:
                 y_off = int(2 * math.sin(self._dem_nhip * 0.2))
             screen.blit(img, (PAD + i*(IW+4), PAD + y_off))
 
-        # ── Ngôi sao GIỮA ────────────────────────────────
+        # ── Ngôi sao góc DƯỚI PHẢI ───────────────────────
         tong_w = self.SO_SAO*(SW+4) - 4
-        sx0    = (w - tong_w)//2
+        sx0    = w - tong_w - PAD
         for i in range(self.SO_SAO):
             img = sao_day if i < self.sao else sao_trong
-            screen.blit(img, (sx0 + i*(SW+4), PAD))
+            screen.blit(img, (sx0 + i*(SW+4), h - SW - PAD))
 
-        # ── Kỹ năng Dash góc dưới trái ───────────────────
+        # ── Skill góc DƯỚI TRÁI ──────────────────────────
         if nhan_vat and nhan_vat.co_dash:
             if dang_tl:
-                self._ve_dung_yen(screen, w, h)   # nhân vật đứng yên
+                self._ve_dung_yen(screen, w, h)
             else:
                 self._ve_ky_nang_dash(screen, nhan_vat, w, h)
         if man_choi and man_choi.so_man in (5,10):
             self._ve_ky_nang_giap(screen, man_choi, w, h)
         elif man_choi and man_choi.co_hoan_doi:
             self._ve_ky_nang_hoan_doi(screen, nhan_vat, man_choi, w, h)
+        # Icon F — kiếm đánh (slot 2, khi co_danh hoặc có so_kiem)
+        if nhan_vat and (nhan_vat.co_danh or nhan_vat.so_kiem > 0):
+            self._ve_ky_nang_f(screen, nhan_vat, w, h)
+        # Icon bay (slot 4, khi co_bay)
+        if nhan_vat and nhan_vat.co_bay:
+            self._ve_ky_nang_bay(screen, nhan_vat, w, h)
 
 
     def _ve_ky_nang_dash(self, screen, nv, w, h):
@@ -144,42 +150,36 @@ class HUD:
     def _ve_ky_nang_hoan_doi(self, screen, nv, mc, w, h):
         if not hasattr(self, '_font_hoan_doi'):
             self._font_hoan_doi = pygame.font.SysFont(FONT_CHINH, 13, bold=True)
-        SZ  = 44; PAD = 10
-        # Hoán đổi: luôn bên phải
-        bx  = w - SZ - PAD
-        by  = h - SZ - PAD
+        SZ = 44; PAD = 10
+        # Slot 3: sau Dash(slot1=PAD) và Kiếm F(slot2=PAD+54)
+        bx = PAD + (SZ + 10) * 2
+        by = h - SZ - PAD
         dang_doi = mc._dang_la_tinh_linh
 
-        mau_nen  = (20,20,50)
-        pygame.draw.rect(screen, mau_nen, (bx,by,SZ,SZ), border_radius=8)
-
-        # Icon: 2 mũi tên xoay (hoán đổi)
+        pygame.draw.rect(screen, (20,20,50), (bx,by,SZ,SZ), border_radius=8)
         cx, cy = bx+SZ//2, by+SZ//2
         if dang_doi:
-            # Đang là tinh linh: icon sáng cyan
             pygame.draw.circle(screen,(80,200,255),(cx,cy),12,3)
             pygame.draw.polygon(screen,(80,200,255),[(cx-4,cy-16),(cx+4,cy-16),(cx,cy-10)])
             pygame.draw.polygon(screen,(80,200,255),[(cx-4,cy+16),(cx+4,cy+16),(cx,cy+10)])
         else:
-            # Bình thường: icon trắng xanh
             pygame.draw.circle(screen,(140,160,220),(cx,cy),12,2)
             pygame.draw.polygon(screen,(140,160,220),[(cx-4,cy-15),(cx+4,cy-15),(cx,cy-9)])
             pygame.draw.polygon(screen,(140,160,220),[(cx-4,cy+15),(cx+4,cy+15),(cx,cy+9)])
-
         vien = (80,200,255) if dang_doi else (80,80,120)
         pygame.draw.rect(screen, vien, (bx,by,SZ,SZ), 2, border_radius=8)
         t = self._font_hoan_doi.render("Q", True, (180,200,240))
         screen.blit(t, (bx+SZ-t.get_width()-3, by+2))
         tl = self._font_hoan_doi.render("Tinh linh" if dang_doi else "Nhan vat",
-                                         True, (80,200,255) if dang_doi else (140,160,200))
+                                        True, (80,200,255) if dang_doi else (140,160,200))
         screen.blit(tl, tl.get_rect(center=(bx+SZ//2, by+SZ+10)))
 
     def _ve_dung_yen(self, screen, w, h):
-        """Icon 'Đứng yên' ở góc dưới trái — hiện khi đang điều khiển tinh linh."""
+        """Icon 'Đứng yên' — slot 1, thay thế E khi điều khiển tinh linh."""
         if not hasattr(self, '_font_dung_yen'):
             self._font_dung_yen = pygame.font.SysFont(FONT_CHINH, 13, bold=True)
-        SZ  = 44; PAD = 10
-        bx  = PAD; by = h - SZ - PAD
+        SZ = 44; PAD = 10
+        bx = PAD; by = h - SZ - PAD
 
         # Nền tối
         pygame.draw.rect(screen,(20,20,45),(bx,by,SZ,SZ),border_radius=8)
@@ -197,13 +197,72 @@ class HUD:
         t = self._font_dung_yen.render("Dung", True, (140,150,180))
         screen.blit(t, t.get_rect(center=(bx+SZ//2, by+SZ+10)))
 
+    def _ve_ky_nang_bay(self, screen, nv, w, h):
+        """Icon bay — slot 4 dưới trái."""
+        if not hasattr(self,'_font_bay'):
+            self._font_bay = pygame.font.SysFont(FONT_CHINH,13,bold=True)
+        SZ=44; PAD=10
+        # Slot 4: PAD + (SZ+10)*3
+        bx = PAD + (SZ+10)*3; by = h-SZ-PAD
+        active = nv._bay_active
+        cd     = nv._bay_cd
+        timer  = nv._bay_timer
+
+        mau_nen = (10,20,50) if active else (20,20,45)
+        pygame.draw.rect(screen, mau_nen, (bx,by,SZ,SZ), border_radius=8)
+        # Icon cánh/mũi tên lên
+        cx,cy = bx+SZ//2, by+SZ//2
+        mau_icon = (100,220,255) if active else (80,80,140) if cd>0 else (140,200,255)
+        pygame.draw.polygon(screen, mau_icon, [
+            (cx,by+6),(cx-12,cy+4),(cx-5,cy+4),(cx-5,by+SZ-6),(cx+5,by+SZ-6),(cx+5,cy+4),(cx+12,cy+4)])
+        # Cooldown overlay
+        if cd > 0 and not active:
+            tl = cd / nv.BAY_CD
+            ov = pygame.Surface((SZ,SZ),pygame.SRCALPHA)
+            ov.fill((0,0,0,150)); screen.blit(ov,(bx,by))
+            t=self._font_bay.render(f"{cd//60+1}s",True,TRANG)
+            screen.blit(t,t.get_rect(center=(bx+SZ//2,by+SZ//2)))
+        # Timer đếm ngược khi active
+        if active:
+            t=self._font_bay.render(f"{timer//60+1}s",True,(100,220,255))
+            screen.blit(t,t.get_rect(center=(bx+SZ//2,by+SZ-10)))
+        vien = (100,220,255) if active else (60,60,100)
+        pygame.draw.rect(screen, vien, (bx,by,SZ,SZ), 2, border_radius=8)
+        t=self._font_bay.render("×2",True,(160,180,220))
+        screen.blit(t,(bx+SZ-t.get_width()-3,by+2))
+
+    def _ve_ky_nang_f(self, screen, nv, w, h):
+        """Icon F đánh thường — slot 2 góc dưới trái."""
+        if not hasattr(self,'_font_f'):
+            self._font_f = pygame.font.SysFont(FONT_CHINH,13,bold=True)
+        SZ=44; PAD=10
+        bx = PAD + SZ + 10; by = h-SZ-PAD
+        # Nền
+        cd = nv._danh_cd
+        pygame.draw.rect(screen,(20,20,45),(bx,by,SZ,SZ),border_radius=8)
+        # Icon kiếm đơn giản
+        cx,cy=bx+SZ//2,by+SZ//2
+        pygame.draw.rect(screen,(220,200,30),(bx+10,cy-3,SZ-14,6),border_radius=2)
+        pygame.draw.polygon(screen,(220,235,255),
+            [(bx+SZ-10,cy-5),(bx+SZ-10,cy+5),(bx+SZ-3,cy)])
+        # Overlay cooldown
+        if cd > 0:
+            pix=int(SZ*cd/nv.DANH_CD)
+            ov=pygame.Surface((SZ,pix),pygame.SRCALPHA)
+            ov.fill((0,0,0,160))
+            screen.blit(ov,(bx,by+SZ-pix))
+        mau_vien=(255,215,0) if cd==0 else (80,80,100)
+        pygame.draw.rect(screen,mau_vien,(bx,by,SZ,SZ),2,border_radius=8)
+        t=self._font_f.render("F",True,(180,180,200))
+        screen.blit(t,(bx+SZ-t.get_width()-3,by+2))
+
     def _ve_ky_nang_giap(self, screen, mc, w, h):
-        """Icon giáp bất tử ở góc dưới phải — màn boss."""
-        import math
+        """Icon giáp bất tử — slot 3 góc dưới trái."""
         if not hasattr(self,'_font_giap'):
             self._font_giap = pygame.font.SysFont(FONT_CHINH,13,bold=True)
         SZ=44; PAD=10
-        bx=w-SZ-PAD; by=h-SZ-PAD
+        # Slot 3: bx = PAD + (SZ+10)*2
+        bx = PAD + (SZ+10)*2; by = h-SZ-PAD
 
         active = mc._giap_active
         cd     = mc._giap_cd

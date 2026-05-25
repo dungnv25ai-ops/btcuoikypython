@@ -2,7 +2,7 @@
 import pygame, math, time
 from cai_dat import *
 
-S = TILE_SIZE
+S = TILE_SIZE // 2   # 0.5 tile
 
 def _ve():
     surf = pygame.Surface((S, S), pygame.SRCALPHA)

@@ -7,7 +7,7 @@ from cai_dat import *
 
 NOI_DUNG = [
     ("Tên trò chơi",  TEN_GAME),
-    ("Thể loại",      "2D Puzzle - Platformer"),
+    ("Thể loại",      "LOST IN TIME - Quá Khử Lãng Quên"),
     ("Công cụ",       "Python 3 + Pygame"),
     ("Số màn chơi",   "10 man  (Boss o man 5 va 10)"),
     ("Phiên bản",     "v0.1  Prototype"),

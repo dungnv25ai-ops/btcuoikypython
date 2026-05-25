@@ -62,8 +62,24 @@ class NhanVat(pygame.sprite.Sprite):
         self.trong_nuoc = False
 
         # Kiếm nhặt được
-        self.so_kiem     = 0     # số lần dùng skill ném còn lại
-        self._nem_signal = False  # True khi vừa nhấn F (man_choi đọc 1 lần)
+        self.so_kiem     = 0
+        self._nem_signal = False
+        # Đánh thường F
+        self.co_danh     = False
+        self._danh_signal= False
+        self._danh_cd    = 0
+        self.DANH_CD     = 20
+
+        # Bay (double jump)
+        self.co_bay      = False
+        self._bay_active = False
+        self._bay_timer  = 0
+        self._bay_cd     = 0
+        self._jump_count = 0
+        self._jump_cd    = 0
+        self.BAY_TIME    = 3 * 60
+        self.BAY_CD      = 1 * 60
+        self.JUMP_WINDOW = 18
 
     def khoa(self, v): self._khoa = v
 
@@ -111,8 +127,30 @@ class NhanVat(pygame.sprite.Sprite):
                 self.vel_y = -4
             return   # không dash, không nhảy bình thường
 
-        # ── Leo tường: giữ chuột + D/A ────────────────────
-                # ── Leo tường: giữ W hoặc Space + D/A ────────────
+        # ── Bay: đếm ngược timer ─────────────────────────
+        if self._bay_cd > 0: self._bay_cd -= 1
+        if self._jump_cd > 0: self._jump_cd -= 1
+
+        if self._bay_active:
+            self._bay_timer -= 1
+            if self._bay_timer <= 0:
+                self._bay_active = False
+                self._bay_cd     = self.BAY_CD
+            # Khi đang bay: chỉ di chuyển ngang, không rơi
+            self.vel_y   = 0
+            self.vel_x   = 0
+            self._leo_huong = 0
+            if muon_trai: self.vel_x = -TOC_DO_CHAY; self.huong = -1
+            if muon_phai: self.vel_x =  TOC_DO_CHAY; self.huong =  1
+            # Kích hoạt dash vẫn được khi bay
+            if self.co_dash and self._dash_cd <= 0 and p[pygame.K_e]:
+                self._dash_dir    = self.huong
+                self._dash_frames = self.DASH_FRAMES
+                self._dash_cd     = self.DASH_COOLDOWN
+                self.vel_y        = 0
+            return   # bỏ qua gravity và leo tường
+
+        # ── Leo tường: giữ W hoặc Space + D/A ────────────
         muon_leo = p[pygame.K_w] or p[pygame.K_SPACE]
         if muon_leo and (muon_phai or muon_trai):
             sang_phai = muon_phai
@@ -132,8 +170,24 @@ class NhanVat(pygame.sprite.Sprite):
         if muon_trai: self.vel_x = -TOC_DO_CHAY; self.huong = -1
         if muon_phai: self.vel_x =  TOC_DO_CHAY; self.huong =  1
 
-        if (p[pygame.K_SPACE] or p[pygame.K_UP] or p[pygame.K_w]) and self.tren_san:
+        nhay_phim = p[pygame.K_SPACE] or p[pygame.K_UP] or p[pygame.K_w]
+        if nhay_phim and self.tren_san:
             self.vel_y = LUC_NHAY; self.tren_san = False
+            self._jump_count = 1
+            self._jump_cd    = self.JUMP_WINDOW
+        elif nhay_phim and not self.tren_san and not hasattr(self,'_nhay_held'):
+            # Lần nhảy 2 — kích hoạt bay
+            if self.co_bay and self._bay_cd <= 0 \
+                    and self._jump_count >= 1 and self._jump_cd > 0:
+                self._bay_active = True
+                self._bay_timer  = self.BAY_TIME
+                self._jump_count = 0
+                self.vel_y       = 0
+        # Chống giữ phím nhảy
+        if nhay_phim:
+            self._nhay_held = True
+        else:
+            if hasattr(self,'_nhay_held'): del self._nhay_held
 
         # ── Kích hoạt dash ────────────────────────────────
         if self.co_dash and self._dash_cd <= 0 and p[pygame.K_e]:
@@ -142,11 +196,29 @@ class NhanVat(pygame.sprite.Sprite):
             self._dash_cd     = self.DASH_COOLDOWN
             self.vel_y        = 0
 
-        # ── Ném kiếm F ────────────────────────────────────
-        self._nem_signal = False
-        if self.so_kiem > 0 and p[pygame.K_f] and not hasattr(self, '_f_held'):
-            self._nem_signal = True
-            self.so_kiem -= 1
+        # F: đánh thường
+        self._danh_signal = False
+        self._nem_signal  = False
+        if self._danh_cd > 0: self._danh_cd -= 1
+        if p[pygame.K_f] and not hasattr(self, '_f_held'):
+            if self.co_danh and self._danh_cd <= 0:
+                self._danh_signal = True
+                self._danh_cd     = self.DANH_CD
+        if p[pygame.K_f]:
+            self._f_held = True
+        else:
+            if hasattr(self, '_f_held'): del self._f_held
+
+        # Chuột phải: ném kiếm boss
+        chuot_phai = pygame.mouse.get_pressed()[2]
+        if chuot_phai and not hasattr(self, '_r_held'):
+            if self.so_kiem > 0:
+                self._nem_signal = True
+                self.so_kiem -= 1
+        if chuot_phai:
+            self._r_held = True
+        else:
+            if hasattr(self, '_r_held'): del self._r_held
         # Chống giữ phím
         if p[pygame.K_f]:
             self._f_held = True
@@ -158,8 +230,9 @@ class NhanVat(pygame.sprite.Sprite):
 
     # ── Trọng lực ─────────────────────────────────────────
     def ap_trong_luc(self):
-        if self.dang_leo:  return   # leo tường: không rơi
-        if self.dang_dash: return   # đang dash: không rơi
+        if self.dang_leo:    return
+        if self.dang_dash:   return
+        if self._bay_active: return   # đang bay: không rơi
         if self.trong_nuoc:
             # Trọng lực nhẹ trong nước, vel_y tối đa 3 (float)
             self.vel_y = min(self.vel_y + TRONG_LUC * 0.3, 3)

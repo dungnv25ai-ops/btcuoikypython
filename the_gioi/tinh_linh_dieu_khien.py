@@ -2,7 +2,7 @@ import pygame, math
 from cai_dat import *
 from the_gioi.tinh_linh import _di_chuyen_khong_xuyen
 
-S = TILE_SIZE
+S = TILE_SIZE // 2   # 0.5 tile
 
 class TinhLinhDieuKhien:
     """Wrapper cho tinh linh khi player hoán đổi vào điều khiển."""

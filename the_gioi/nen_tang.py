@@ -3,17 +3,9 @@ import pygame
 from cai_dat import *
 
 def _khoi(mc, ms, mt, ky=""):
-    s = pygame.Surface((TILE_SIZE,TILE_SIZE))
+    s=pygame.Surface((TILE_SIZE,TILE_SIZE))
     s.fill(mc)
-    pygame.draw.rect(s,ms,(0,0,TILE_SIZE,3))
-    pygame.draw.rect(s,mt,(0,TILE_SIZE-3,TILE_SIZE,3))
-    pygame.draw.rect(s,mt,(TILE_SIZE-3,0,3,TILE_SIZE))
-    pygame.draw.rect(s,ms,(0,0,3,TILE_SIZE))
-    pygame.draw.rect(s,mt,(0,0,TILE_SIZE,TILE_SIZE),1)
-    if ky:
-        f=pygame.font.SysFont(None,22,bold=True)
-        t=f.render(ky,True,ms)
-        s.blit(t,t.get_rect(center=(TILE_SIZE//2,TILE_SIZE//2)))
+    pygame.draw.rect(s,mt,(0,0,TILE_SIZE,TILE_SIZE),2)
     return s
 
 _C={}

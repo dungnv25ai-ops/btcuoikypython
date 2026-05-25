@@ -5,19 +5,10 @@ from cai_dat import *
 T = TILE_SIZE
 
 def _ve_boss(mau_chinh, mau_sang, mau_toi, ky="B"):
-    W, H = T, T*2
-    s = pygame.Surface((W,H), pygame.SRCALPHA)
-    pygame.draw.rect(s, mau_chinh, (0,0,W,H), border_radius=6)
-    pygame.draw.rect(s, mau_sang,  (2,2,W-4,H//2), border_radius=5)
-    pygame.draw.rect(s, mau_toi,   (2,H//2,W-4,H//2-2), border_radius=5)
-    # Mắt
-    for ey in [H//4, H*3//4]:
-        pygame.draw.circle(s,(255,50,50),(W//2-8,ey),6)
-        pygame.draw.circle(s,(255,50,50),(W//2+8,ey),6)
-        pygame.draw.circle(s,(255,200,0),(W//2-8,ey),3)
-        pygame.draw.circle(s,(255,200,0),(W//2+8,ey),3)
-    # Viền
-    pygame.draw.rect(s, mau_toi, (0,0,W,H), 2, border_radius=6)
+    W,H=TILE_SIZE,TILE_SIZE*2
+    s=pygame.Surface((W,H),pygame.SRCALPHA)
+    pygame.draw.rect(s,mau_chinh,(0,0,W,H),border_radius=6)
+    pygame.draw.rect(s,mau_toi,(0,0,W,H),3,border_radius=6)
     return s
 
 
