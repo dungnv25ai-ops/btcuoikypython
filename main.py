@@ -13,17 +13,6 @@ from man_hinh.thong_tin       import ThongTin
 from man_hinh.huong_dan       import HuongDan
 
 
-# ── Màn hình splash/loading ───────────────────────────────
-def _ve_sao_splash(s, cx, cy, r, mau, vien, dem):
-    pts = []
-    for i in range(10):
-        ang = math.radians(-90 + i*36 + dem*0.5)
-        ri  = r if i%2==0 else r//2
-        pts.append((cx + ri*math.cos(ang), cy + ri*math.sin(ang)))
-    pygame.draw.polygon(s, mau, pts)
-    pygame.draw.polygon(s, vien, pts, 2)
-
-
 def _kiem_tra_modules(man_hinh, dong_ho):
     """
     Thực sự import từng module, hiện tiến trình.
@@ -62,29 +51,54 @@ def _kiem_tra_modules(man_hinh, dong_ho):
     tong = len(CAC_MODULE)
 
     def _ve_nen(tien_trinh, label, dem):
-        man_hinh.fill((14, 14, 34))
-        # Viền
-        pygame.draw.rect(man_hinh, VANG, (0,0,SW,SH), 2, border_radius=12)
-        # Tên game
-        t = font_tieu.render(TEN_GAME, True, VANG)
-        man_hinh.blit(t, t.get_rect(center=(SW//2, 90)))
-        t2 = font_label.render("Đang kiểm tra hệ thống...", True, (130,130,180))
-        man_hinh.blit(t2, t2.get_rect(center=(SW//2, 118)))
-        # Nhãn bước hiện tại
-        tl = font_label.render(label, True, (160,200,220))
-        man_hinh.blit(tl, tl.get_rect(center=(SW//2, SH-70)))
-        # Thanh tiến trình
-        BW,BH = 300,12; bx=(SW-BW)//2; by=SH-50
-        pygame.draw.rect(man_hinh,(30,30,60),(bx,by,BW,BH),border_radius=6)
-        fw = int(BW*tien_trinh)
-        if fw>0:
-            r=int(60+195*tien_trinh); g=int(140+70*tien_trinh)
-            b_col=max(0,int(220-220*tien_trinh))
+        import os
+        # Load ảnh nền (chỉ tìm đúng file load.png, load 1 lần)
+        if not hasattr(_ve_nen, '_bg') or _ve_nen._bg is None:
+            duong_dan = os.path.join(os.path.dirname(__file__), 'tai_nguyen', 'hinh_anh', 'load.png')
+            _ve_nen._bg = None
+            
+            if os.path.exists(duong_dan):
+                try:
+                    img = pygame.image.load(duong_dan).convert()
+                    _ve_nen._bg = pygame.transform.scale(img, (SW, SH)) # Nhớ đảm bảo SW, SH đã có sẵn
+                except Exception:
+                    pass
+
+        # Vẽ nền (nếu có ảnh thì vẽ ảnh, lỗi/không có thì vẽ màu nền)
+        if _ve_nen._bg:
+            man_hinh.blit(_ve_nen._bg, (0, 0))
+        else:
+            man_hinh.fill((14, 14, 34))
+            
+        # --- BẮT ĐẦU TỪ ĐÂY TRỞ XUỐNG LÀ CODE GIỮ NGUYÊN (Vẽ viền, tên game, thanh tiến trình...) ---
+
+        if _ve_nen._bg:
+            man_hinh.blit(_ve_nen._bg, (0, 0))
+        else:
+            man_hinh.fill((14, 14, 34))
+
+        # Thanh tiến trình ở dưới
+        BW, BH = int(SW*0.75), 12
+        bx = (SW-BW)//2; by = SH - 40
+        # Nền thanh (mờ)
+        ov = pygame.Surface((BW+20, BH+24), pygame.SRCALPHA)
+        ov.fill((0,0,0,140))
+        man_hinh.blit(ov, (bx-10, by-6))
+        # Track
+        pygame.draw.rect(man_hinh, (40,40,60), (bx,by,BW,BH), border_radius=6)
+        # Fill
+        fw = int(BW * tien_trinh)
+        if fw > 0:
+            r = int(60+195*tien_trinh); g = int(140+70*tien_trinh)
+            b_col = max(0, int(220-220*tien_trinh))
             pygame.draw.rect(man_hinh,(r,g,b_col),(bx,by,fw,BH),border_radius=6)
-        pygame.draw.rect(man_hinh,(80,80,140),(bx,by,BW,BH),1,border_radius=6)
+        pygame.draw.rect(man_hinh,(120,120,180),(bx,by,BW,BH),1,border_radius=6)
+        # Label nhỏ bên dưới thanh
+        tl = font_label.render(label, True, (200,210,230))
+        man_hinh.blit(tl, tl.get_rect(center=(SW//2, by+BH+10)))
         # %
-        tp = font_label.render(f"{int(tien_trinh*100)}%", True, TRANG)
-        man_hinh.blit(tp, tp.get_rect(center=(SW//2, by+BH+14)))
+        tp = font_label.render(f"{int(tien_trinh*100)}%", True, (220,220,240))
+        man_hinh.blit(tp, tp.get_rect(midright=(bx+BW, by-4)))
         pygame.display.flip()
         dong_ho.tick(FPS)
 
@@ -181,10 +195,10 @@ def chay_game():
 
     # ── Sau splash: mở full màn hình ─────────────────────
     import os
-    os.environ.pop('SDL_VIDEO_WINDOW_POS', None)
-    man_hinh = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-    pygame.display.set_caption(TEN_GAME)
-    toan_man_hinh = True
+    os.environ['SDL_VIDEO_CENTERED'] = '1'
+    man_hinh = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.RESIZABLE)
+
+    toan_man_hinh = False
 
     cac_man    = tao_cac_man(man_hinh)
     trang_thai = TRANG_THAI_MENU

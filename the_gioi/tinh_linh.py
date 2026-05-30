@@ -1,25 +1,29 @@
 # the_gioi/tinh_linh.py
-import pygame, math, time
+import pygame, math, time, os
 from cai_dat import *
 
 S = TILE_SIZE // 2   # 0.5 tile
 
-def _ve():
-    surf = pygame.Surface((S, S), pygame.SRCALPHA)
-    pygame.draw.rect(surf,(100,200,255,200),(4,4,S-8,S-8),border_radius=8)
-    pygame.draw.rect(surf,(200,240,255,230),(6,6,S-12,S-12),border_radius=6)
-    pygame.draw.rect(surf,(255,255,255,200),(10,10,S-20,S-20),border_radius=4)
-    pygame.draw.rect(surf,(150,220,255,255),(4,4,S-8,S-8),2,border_radius=8)
-    pygame.draw.circle(surf,(255,255,255,255),(S//2,S//2),4)
-    return surf
-
 _SPRITE = None
 def _get():
     global _SPRITE
-    if _SPRITE is None: _SPRITE = _ve()
+    if _SPRITE is None:
+        # Tìm đường dẫn từ file hiện tại lui về thư mục gốc -> tai_nguyen -> hinh_anh
+        thu_muc_goc = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        duong_dan = os.path.join(thu_muc_goc, "tai_nguyen", "hinh_anh", "tinhlinh.png")
+        
+        try:
+            # Load ảnh png và thay đổi kích thước cho vừa với S
+            anh = pygame.image.load(duong_dan).convert_alpha()
+            _SPRITE = pygame.transform.scale(anh, (S, S))
+        except Exception as e:
+            print(f"Lỗi: Không tìm thấy ảnh {duong_dan}. Chi tiết: {e}")
+            # Đề phòng mất ảnh, tự động vẽ cục màu xanh thay thế
+            _SPRITE = pygame.Surface((S, S), pygame.SRCALPHA)
+            pygame.draw.rect(_SPRITE, (100, 200, 255), (0, 0, S, S), border_radius=8)
+            
     return _SPRITE
-
-
+    # ... (Giữ nguyên phần code di chuyển bên dưới của bạn) ...
 def _di_chuyen_khong_xuyen(x, y, mx, my, size, ds_nen):
     """Di chuyển (mx,my) có collision trượt — dùng chung cho tinh linh."""
     if not ds_nen:

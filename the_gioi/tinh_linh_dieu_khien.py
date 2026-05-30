@@ -1,6 +1,8 @@
+# the_gioi/tinh_linh_dieu_khien.py
 import pygame, math
 from cai_dat import *
-from the_gioi.tinh_linh import _di_chuyen_khong_xuyen
+# Import hàm _get để lấy ảnh png và hàm di chuyển
+from the_gioi.tinh_linh import _get, _di_chuyen_khong_xuyen
 
 S = TILE_SIZE // 2   # 0.5 tile
 
@@ -12,18 +14,16 @@ class TinhLinhDieuKhien:
         self.x     = float(x)
         self.y     = float(y)
         self._dem  = 0
-        self.image = self._ve()
+        
+        # 1. Lấy ảnh gốc tinhlinh.png
+        anh_goc = _get().copy()
+        # 2. Vẽ đè viền vàng (độ dày 3px) lên trên để đánh dấu đang được điều khiển
+        pygame.draw.rect(anh_goc, (255, 220, 0, 255), (0, 0, S, S), 3, border_radius=8)
+        self.image = anh_goc
+        
         self.rect  = pygame.Rect(int(x), int(y), S, S)
 
-    def _ve(self):
-        surf = pygame.Surface((S,S), pygame.SRCALPHA)
-        pygame.draw.rect(surf,(80,180,255,180),(2,2,S-4,S-4),border_radius=10)
-        pygame.draw.rect(surf,(160,220,255,220),(4,4,S-8,S-8),border_radius=8)
-        pygame.draw.rect(surf,(230,245,255,240),(8,8,S-16,S-16),border_radius=6)
-        pygame.draw.rect(surf,(255,255,255,255),(12,12,S-24,S-24),border_radius=4)
-        pygame.draw.rect(surf,(255,220,0,255),(2,2,S-4,S-4),3,border_radius=10)
-        return surf
-
+    # ... (Giữ nguyên vòng lặp update() và các hàm xử lý nút bên dưới của bạn) ...
     def update(self, ds_nen=None):
         self._dem += 1
         p  = pygame.key.get_pressed()

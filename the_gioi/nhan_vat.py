@@ -80,6 +80,7 @@ class NhanVat(pygame.sprite.Sprite):
         self.BAY_TIME    = 3 * 60
         self.BAY_CD      = 1 * 60
         self.JUMP_WINDOW = 18
+        self.bat_tu_timer = 0
 
     def khoa(self, v): self._khoa = v
 

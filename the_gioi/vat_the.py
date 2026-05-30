@@ -173,11 +173,13 @@ class KeDiChuyen(pygame.sprite.Sprite):
         return surf
 
     def gan_nguoi_choi(self, player_rect):
+        if self._sk_phase == 1:
+            return False
         return self.rect.inflate(self.PHAM_VI_DIET*2, self.PHAM_VI_DIET*2)\
                    .colliderect(player_rect)
 
     def kiem_tra_tan_cong(self, player_rect, i_frames):
-        if self._bien_mat or i_frames > 0:
+        if self._bien_mat or i_frames > 0 or self._sk_phase == 1:
             return False, 0, 0
         if self.rect.colliderect(player_rect):
             dx = player_rect.centerx - self.rect.centerx
@@ -234,7 +236,7 @@ class KeDiChuyen(pygame.sprite.Sprite):
                     self._huong_tc = 1 if player_rect.centerx >= self.rect.centerx else -1
                 self._anim(_DT_TU_LUC)
                 surf = self._tick_anim(loop=True)
-                a = int(160 + 95*abs(__import__("math").sin(self._tu_luc_dem * 0.25)))
+                a = int(160 + 95*abs(math.sin(self._tu_luc_dem * 0.25)))
                 surf = surf.copy(); surf.set_alpha(a)
                 self.image = self._flip_img(surf)
                 if self._tu_luc_dem >= self.TU_LUC_TIME:
@@ -273,7 +275,7 @@ class KeDiChuyen(pygame.sprite.Sprite):
                           self.rect.bottom+2, 2, 2)
             for n in ds_nen_tang:
                 if rc.colliderect(n.rect): co_dat_do = True; break
-            if dung_tuong or not co_dat_do                     or self._x <= self.b_trai                     or self._x >= self.b_phai - self.rect.width:
+            if dung_tuong or not co_dat_do or self._x <= self.b_trai or self._x >= self.b_phai - self.rect.width:
                 self.vel_x *= -1
                 if self._x <= self.b_trai:
                     self._x = float(self.b_trai); self.vel_x = abs(self.TOC_DO)
@@ -417,17 +419,30 @@ _CACHE_GAI = _CACHE_NUOC = _CACHE_CAU = None
 
 def _ve_gai():
     global _CACHE_GAI
-    if _CACHE_GAI: return _CACHE_GAI.copy()
+    if _CACHE_GAI is not None: return _CACHE_GAI.copy()
+    
     T = TILE_SIZE
-    s = pygame.Surface((T,T), pygame.SRCALPHA)
-    pygame.draw.rect(s,(40,40,40),(0,T//2,T,T//2))
-    for i in range(4):
-        x = int(T/8 + i*T/4)
-        pygame.draw.polygon(s,(160,160,160),[(x-T//10,T),(x+T//10,T),(x,T//4)])
-        pygame.draw.polygon(s,(220,220,220),[(x-T//14,T-4),(x+T//14,T-4),(x,T//4+4)])
+    try:
+        # Load ảnh
+        img = pygame.image.load("tai_nguyen/khoi/gai.png").convert_alpha()
+        
+        # CHỈNH KÍCH THƯỚC Ở ĐÂY:
+        # Ép ảnh vừa khít ô TxT. 
+        # Nếu bạn muốn gai cao hơn bình thường, bạn có thể chỉnh (T, int(T*1.2)) 
+        # nhưng (T, T) là chuẩn nhất để không đè lên ô khác.
+        s = pygame.transform.scale(img, (T, T))
+        
+    except Exception as e:
+        # Nếu lỗi ảnh, dùng code vẽ dự phòng của bạn
+        s = pygame.Surface((T, T), pygame.SRCALPHA)
+        pygame.draw.rect(s, (40, 40, 40), (0, T//2, T, T//2))
+        for i in range(4):
+            x = int(T/8 + i*T/4)
+            pygame.draw.polygon(s, (160, 160, 160), [(x-T//10, T), (x+T//10, T), (x, T//4)])
+            pygame.draw.polygon(s, (220, 220, 220), [(x-T//14, T-4), (x+T//14, T-4), (x, T//4+4)])
+            
     _CACHE_GAI = s
     return s.copy()
-
 def _ve_nuoc(dem=0):
     global _CACHE_NUOC
     T = TILE_SIZE
@@ -447,25 +462,14 @@ def _ve_qua_cau(r=14):
     return s.copy()
 
 class Gai(pygame.sprite.Sprite):
-    """Gai cố định 1x1 — chạm vào mất mạng, gai không biến mất."""
-    def __init__(self, cot, hang, ngang=False):
+    """Gai nhọn đứng im, chạm vào là mất mạng. Hitbox đã được thu nhỏ ở man_choi"""
+    def __init__(self, cot, hang):
         super().__init__()
-        self.image = _ve_gai()
-        self.rect  = self.image.get_rect(topleft=(cot*TILE_SIZE, hang*TILE_SIZE))
-
-    def update(self, ds_nen=None):
-        pass  # cố định, không làm gì
-
+        # Gọi hàm vẽ gai (đảm bảo hàm _ve_gai của bạn không còn tham số roi)
+        self.image = _ve_gai() 
+        self.rect = self.image.get_rect(topleft=(cot*TILE_SIZE, hang*TILE_SIZE))
     def kiem_tra_cham_nguoi(self, player_rect):
         return self.rect.colliderect(player_rect)
-
-    def bat_dau_bien_mat(self):
-        pass  # KHÔNG biến mất
-
-    def ve_canh_bao(self, screen, cam_x, cam_y, font):
-        pass  # không cảnh báo
-
-
 class KhoiDichChuyen(pygame.sprite.Sprite):
     """Khối teleport. Mặc định 2x2."""
     def __init__(self, cot, hang, dich_den_cot=42, dich_den_hang=5, rong=2, cao=2):
@@ -603,8 +607,7 @@ class KhoiNuoc(pygame.sprite.Sprite):
         self._cot   = cot
         self._hang  = hang
         self.image  = _ve_nuoc(0)
-        self.rect   = self.image.get_rect(
-            topleft=(cot * TILE_SIZE, hang * TILE_SIZE))
+        self.rect   = self.image.get_rect(topleft=(cot * TILE_SIZE, hang * TILE_SIZE))
 
     def update(self):
         self._dem += 1
@@ -657,10 +660,9 @@ class KiemBay(pygame.sprite.Sprite):
         super().__init__()
         T = TILE_SIZE
         # Phase1: 1x2, Phase2: 1x3
-        if dy != 0:  # dọc
-            w = T; h = T*2 if phase==1 else T*3
-        else:        # ngang
-            w = T*2 if phase==1 else T*3; h = T
+        if dy != 0: w = T; h = T*2 if phase==1 else T*3
+        else:       w = T*2 if phase==1 else T*3; h = T
+
         self.image = _ve_kiem_bay(w, h, phase)
         self.rect  = self.image.get_rect(center=(x, y))
         self._x    = float(x); self._y = float(y)

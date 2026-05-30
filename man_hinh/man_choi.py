@@ -3,7 +3,7 @@ import pygame
 import math
 from cai_dat import *
 from the_gioi.nhan_vat  import NhanVat
-from the_gioi.nen_tang  import NenTang, NenTangBoss, KhucGo, ODict
+from the_gioi.nen_tang  import NenTang, NenTangBoss, KhucGo, ODict, TileCo
 from the_gioi.tinh_linh import TinhLinh
 from the_gioi.tinh_linh_dieu_khien import TinhLinhDieuKhien
 from the_gioi.vat_the   import Kiem, KeDiChuyen, Sach1x1, KhoiDichChuyen, Gai, QuaCau, KhoiNuoc, KiemBay, KiemMua, KiemNem
@@ -25,14 +25,14 @@ def _gen_map1():
         #0         1         2         3         4         5         6         7         8         
         #01234567890123456789012345678901234567890123456789012345678901234567890123456789012
         "                         $                                 * ", # 0
-        "                        ###                                * ", # 1
-        "                        #      $                           * ", # 2
-        "                        #      ##                          *#######################", # 3
-        "                        #$                         ################################", # 4
-        "                      #####                        ################################", # 5
+        "                        CCC                                * ", # 1
+        "                                $                          * ", # 2
+        "                               CCC                         *CCCCCCCCCCCCCCCCCCCCCC", # 3
+        "                         $                         CCCCCCCCC######################", # 4
+        "                        CCC                        ################################", # 5
         " P                                                 ################################", # 6
         "                              #                    ################################", # 7
-        "###################################################################################", # 8
+        "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC################################", # 8
         "###################################################################################", # 9
         "###################################################################################"  # 10
     ]
@@ -48,22 +48,22 @@ def _gen_map1():
 def _gen_map2():
     
     m_str = [
-        #0         1         2         3         4         5         6         7         8         
-        #012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
-        "                          $                             $                  * ", # 0
-        "                          E         E                                      * ", # 1
-        "                         ###       ###       ###       ###       ###      ################", # 2
-        "                                                                          ################", # 3
-        "                                                                          ################", # 4
-        "                                                                          ################", # 5
-        " P        K                                                               ################", # 6
-        "                          E  #                                            ################", # 7
-        "#####################     ################################################################", # 8
-        "#####################  $  ################################################################", # 9
-        "##########################################################################################"  # 10
+        #0         1         2         3         4         5         6         7         8         9         1
+        #01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+        "                          $                             $                          * ", # 0
+        "                          E         E         E         E         E         E#     * ", # 1
+        "                         CCC       CCC       CCC       CCC       CCC      CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", # 2
+        "                                                                          ####################################", # 3
+        "                                                                          ####################################", # 4
+        "                                                                          ####################################", # 5
+        " P        K                                                               ####################################", # 6
+        "                          E  #                                            ####################################", # 7
+        "CCCCCCCCCCCCCCCCCCCCC     CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC####################################", # 8
+        "#####################  $  ####################################################################################", # 9
+        "#####################CCCCC####################################################################################"  # 10
     ]
     
-    R, C = 11, 90
+    R, C = 11,120
     m = [[' ' for _ in range(C)] for _ in range(R)]
     
     for r, row_str in enumerate(m_str):
@@ -82,12 +82,12 @@ def _gen_map3():
         #0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
         "                           ###########################################################################################DD   * ", # 1
         "                           ############################                                    ###########################DD   * ", # 2
-        "                           ############################                                    ###########################################################", # 3
+        "                           ############################                                    ###########################CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", # 3
         "                           ############################             $         $            ###########################################################", # 4
         "                           ############################                                    ###########################################################", # 5
         " P                       AA############################CC                                BB###########################################################", # 6
         "        S                AA############################CC         RRRRR  $  RRRRR        BB###########################################################", # 7
-        "######################################################################################################################################################", # 8
+        "CCCCCCCCCCCCCCCCCCCCCCCCCCC###########################################################################################################################", # 8
         "######################################################################################################################################################", # 9
         "######################################################################################################################################################"  # 10
     ]
@@ -118,7 +118,7 @@ def _gen_map4():
         "                                       *", # 7
         " P                                     *", # 8
         "                                       *", # 9
-        "################################################################################", # 10
+        "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", # 10
         "################################################################################"  # 11
     ]
     R, C = 12, 80
@@ -135,23 +135,23 @@ MAP_4 = _gen_map4()
 
 
 def _gen_map6():
-        #0         1         2         3         4         5         6         7         8         
-        #012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+        #0         1         2         3         4         5         6         7         8         9
+        #0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
     m_str = [
-        "                                                       * ", # 0
-        "                                                       * ", # 1
-        "                                                       * * ", # 2
-        "                                                  ########################################", # 3
-        "                                                  ########################################", # 4
-        "                                                  ########################################", # 5
-        " P                                                ########################################", # 6
-        "                                                  ########################################", # 7
-        "#####  $  #####  $  #####  $  #####     #####     ########################################", # 8
-        "#####     #####     #####     #####     #####     ########################################", # 9
-        "#####     #####     #####     #####     #####     ########################################"  # 10
+        "                                                                  * ", # 0
+        "                                                                  * ", # 1
+        "                                             E                    * ", # 2
+        "                                             C            CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", # 3
+        "                                                          ##########################################", # 4
+        "                                                          ##########################################", # 5
+        " P                                                        ##########################################", # 6
+        "              E           E           E           E       ##########################################", # 7
+        "CCCCC   $   CCCCC   $   CCCCC   $   CCCCC       CCCCC     ##########################################", # 8
+        "#####       #####       #####       #####       #####     ##########################################", # 9
+        "#####       #####       #####       #####       #####     ##########################################"  # 10
     ]
     
-    R, C = 11, 90
+    R, C = 11, 100
     m = [[' ' for _ in range(C)] for _ in range(R)]
     
     for r, row_str in enumerate(m_str):
@@ -164,23 +164,23 @@ def _gen_map6():
 MAP_6 = _gen_map6()
 
 def _gen_map7():
-        #0         1         2         3         4         5         6         7                  
-        #01234567890123456789012345678901234567890123456789012345678901234567890123456789
+        #0         1         2         3         4         5         6         7         8         9         0       
+        #01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789 
     m_str = [
-        "################################################################################", # 0
-        "#                                                                              #", # 1
-        "#  $                                                                           #", # 2
-        "####  ####       ###       $                                                   #", # 3
-        "#     ####                                               ######                #", # 4
-        "####                                       #####                            $  #", # 5
-        "#           ##                             #                             #     #", # 6
-        "#           ##    ####         #####                                     #     #", # 7
-        "#  P    ##                                                               #     #", # 8
-        "#       ##     RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR#*****#", # 9
-        "################################################################################"  # 10
+        "##############################################################################################################", # 0
+        "#                                                                              ###############################", # 1
+        "#  $                                                                           ###############################", # 2
+        "#CCC  CCCC       CCC       $                                                   ###############################", # 3
+        "#     ####                                               CCCCC                 ###############################", # 4
+        "#CCC                                       CCCCC                            $  ###############################", # 5
+        "#           CC                             #                             C     ###############################", # 6
+        "#           ##    CCCCC        CCCCC                                     #     ###############################", # 7
+        "#  P    CC                                                               #     ###############################", # 8
+        "#       ##     RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR#*****###############################", # 9
+        "#CCCCCCC######################################################################################################"  # 10
     ]
     
-    R, C = 11, 100
+    R, C = 11, 110
     m = [[' ' for _ in range(C)] for _ in range(R)]
     
     for r, row_str in enumerate(m_str):
@@ -198,13 +198,13 @@ def _gen_map8():
     m_str = [
         "                                     ~~~         $* ", # 0
         "                                     ~~~         E* ", # 1
-        "                                     ~~~         #* ", # 2
+        "                                     ~~~         C* ", # 2
         "                                     ~~~          * ", # 3
         "                                     ~~~          * ", # 4
         "                    $         $      ~~~          * ", # 5
         "                                     ~~~          * ", # 6
         "  P                 E         E      ~~~          * ", # 7
-        "##########~~~~~~~~~~#~~~~~~~~~#~~~~~~~~~########################################", # 8
+        "CCCCCCCCCC~~~~~~~~~~C~~~~~~~~~C~~~~~~~~~CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", # 8
         "##########~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~########################################", # 9
         "##########~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~########################################"  # 10
     ]
@@ -277,7 +277,7 @@ def _gen_map_boss5():
     return [''.join(r) for r in m]
 def _gen_map_boss10():
         #0         1         2         3                     
-        #0123456789012345678901234567890123456789
+        #01234567890123456789012345678901
     m_str = [
         "", # 0
         "", # 1
@@ -287,11 +287,12 @@ def _gen_map_boss10():
         "", # 5
         "", # 6
         "", # 7
-        "", # 8
-        "  P", # 9
-        "########################################"  # 10
+        "     P    ", # 8
+        "      ", # 9
+        "################################"  # 10
     ]  
-    R, C = 11, 40
+
+    R, C = 11, 32
     m = [[' ' for _ in range(C)] for _ in range(R)]
     
     for r, row_str in enumerate(m_str):
@@ -496,7 +497,7 @@ class ManChoi:
         elif n == 3:     self.nhan_vat.co_dash = self.da_co_dash
         else:            self.nhan_vat.co_dash = False
         if n==1: self.video.bat()
-
+    
     def _tai_ban_do(self):
         ban_do,la_boss=_lay_map(self.so_man)
         self.ban_do=ban_do; self.la_boss=la_boss
@@ -524,6 +525,7 @@ class ManChoi:
         for ri,hang in enumerate(ban_do):
             for ci,o in enumerate(hang):
                 if   o=='#': self.ds_nen.add(Tile(ci,ri))
+                elif o=='C': self.ds_nen.add(TileCo(ci,ri))
                 elif o=='W': self.ds_vat.add(KhucGo(ci,ri))
                 elif o=='K': self.ds_kiem.add(Kiem(ci,ri,ngang=False))
                 elif o=='S': self.ds_sach.add(Sach1x1(ci,ri))
@@ -538,12 +540,14 @@ class ManChoi:
                 elif o=='D' and ri==1 and ci==82: self.ds_dc.add(KhoiDichChuyen(ci,ri,71,6))
                 elif o=='E':
                     co_tc = self.so_man in (6,7,8,9)
-                    self.ds_ke.add(KeDiChuyen(ci,ri,
-                        max(0,ci-10), min(map_w_tile,ci+10),
-                        co_tan_cong=co_tc))
+                    bien_t = max(1, ci-15)
+                    bien_p2 = min(map_w_tile-1, ci+15)
+                    ke = KeDiChuyen(ci, ri, bien_t, bien_p2, co_tan_cong=co_tc)
+                    if self.so_man in (5, 10):
+                        ke.mau = 3   # quái boss có 3 máu
+                    self.ds_ke.add(ke)
                 elif o=='$': self.ds_sao_map.add(_SaoMap(ci,ri))
                 elif o=='R': self.ds_roi.add(Gai(ci,ri))
-                elif o=='r': self.ds_roi.add(Gai(ci,ri))
                 elif o=='P': sx,sy=ci,ri
                 elif o=='*': self.ds_dich.add(ODict(ci,ri))
         # Thêm sao cho map dùng VITRI_SAO
@@ -552,9 +556,9 @@ class ManChoi:
         self.spawn_pos=(sx*T,sy*T)
         # Spawn boss tại row=8, col=37
         if self.so_man==5:
-            self.ds_boss.add(Boss5(37,8))
+            self.ds_boss.add(Boss5(25,8))
         elif self.so_man==10:
-            self.ds_boss.add(Boss10(37,8))
+            self.ds_boss.add(Boss10(25,8))
         # Skill vars chung cho man5 và man10 — reset mỗi lần tải màn boss
         if self.so_man in (5,10):
             self._bsk_sk1_next   = 5*FPS
@@ -562,6 +566,7 @@ class ManChoi:
             self._bsk_sk2_active = False
             self._bsk_sk2_timer  = 0
             self._bsk_khoi_an    = []
+            self._bsk_ke_an      = []
         # Vars riêng boss10
         if self.so_man == 10:
             self._b10_phase     = 1
@@ -631,45 +636,39 @@ class ManChoi:
                 self._ds_cau.add(QuaCau(bx+ox, by, px, py))
 
     def _boss_an_khoi(self, toan_bo_san=False):
-        """Skill 2: ẩn tile.
-        toan_bo_san=True  → xóa toàn bộ sàn row cuối (boss10).
-        toan_bo_san=False → chỉ xóa platform dưới chân (boss5)."""
-        map_h  = len(self.ban_do)
-        map_w  = max(len(r) for r in self.ban_do) if self.ban_do else 40
-        san_y  = (map_h - 1) * T
-        bien_p = (map_w - 1) * T
-
-        hidden = []
-        if toan_bo_san:
-            # Boss10: xóa TẤT CẢ tile ở row sàn (fill(10,11,0,40))
-            for tile in list(self.ds_nen):
-                if abs(tile.rect.y - san_y) <= T // 4:
-                    hidden.append(tile)
-        else:
-            # Boss5: platform trực tiếp dưới chân, loại biên
-            px_l = self.nhan_vat.rect.left
-            px_r = self.nhan_vat.rect.right
-            py_b = self.nhan_vat.rect.bottom
-            for tile in list(self.ds_nen):
-                if tile.rect.x <= 0:          continue
-                if tile.rect.right >= bien_p: continue
-                if tile.rect.y <= 0:          continue
-                if tile.rect.y >= san_y:      continue
-                if abs(tile.rect.top - py_b) <= T // 2:
-                    if tile.rect.right > px_l and tile.rect.left < px_r:
-                        hidden.append(tile)
-
-        for tile in hidden:
+        hidden_tiles = list(self.ds_nen)
+        for tile in hidden_tiles:
             self.ds_nen.remove(tile)
-        self._bsk_khoi_an    = hidden
+
+        # Lưu và ẩn quái
+        hidden_ke = []
+        for ke in list(self.ds_ke):
+            hidden_ke.append({
+                'cot':  ke.rect.x // T,
+                'hang': ke.rect.y // T,
+                'co_tan_cong': ke.co_tan_cong,
+            })
+            ke.kill()
+
+        self._bsk_khoi_an    = hidden_tiles
+        self._bsk_ke_an      = hidden_ke
         self._bsk_sk2_active = True
         self._bsk_sk2_timer  = 5 * FPS
 
     def _boss_hien_khoi(self):
-        """Restore tile đã ẩn bởi skill 2."""
-        for tile in getattr(self,'_bsk_khoi_an',[]):
+        """Restore tile và hồi sinh quái."""
+        for tile in getattr(self, '_bsk_khoi_an', []):
             self.ds_nen.add(tile)
-        self._bsk_khoi_an    = []
+        self._bsk_khoi_an = []
+
+        # Hồi sinh quái
+        for ke_info in getattr(self, '_bsk_ke_an', []):
+            ke = KeDiChuyen(ke_info['cot'], ke_info['hang'],
+                            ke_info['cot']-10, ke_info['cot']+10,
+                            co_tan_cong=ke_info['co_tan_cong'])
+            ke.mau = 3
+            self.ds_ke.add(ke)
+        self._bsk_ke_an = []
         self._bsk_sk2_active = False
         self._bsk_sk2_timer  = 0
 
@@ -1247,12 +1246,11 @@ class ManChoi:
             for gai in list(self.ds_roi):
                 if gai.kiem_tra_cham_nguoi(self.nhan_vat.rect):
                     go = self.hud.mat_mang()
-                    if go: self.ket_qua.hien_thua(self.so_man)
-                    else:  self._i_frames = KeDiChuyen.I_FRAMES
+                    self._hoi_sinh()
+                    if go: 
+                        self.ket_qua.hien_thua(self.so_man)
+                    else:  self._i_frames = KeDiChuyen.I_FRAMES 
                     break
-                game_over = self.hud.mat_mang()
-                if game_over: self.ket_qua.hien_thua(self.so_man)
-                else:         self._hoi_sinh()
         # Nhặt sao
         nhat=pygame.sprite.spritecollide(self.nhan_vat,self.ds_sao_map,True)
         for _ in nhat: self.hud.nhat_sao()
@@ -1417,9 +1415,7 @@ class ManChoi:
         elif self.so_man==10:
             for b in self.ds_boss:
                 b.ve_thanh_mau(self.man_hinh,cam.lech_x,cam.lech_y,self.fn)
-        # Cảnh báo khối rơi
-        for kr in self.ds_roi:
-            kr.ve_canh_bao(self.man_hinh,cam.lech_x,cam.lech_y,self.fn)
+
         # Vẽ sao trên map
         for s in self.ds_sao_map:
             self.man_hinh.blit(s.image,cam.ap_dung(s))

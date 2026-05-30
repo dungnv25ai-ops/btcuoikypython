@@ -1,64 +1,77 @@
-# the_gioi/boss.py — Boss đứng yên 1x2
+# the_gioi/boss.py
 import pygame, math
 from cai_dat import *
 
 T = TILE_SIZE
 
-def _ve_boss(mau_chinh, mau_sang, mau_toi, ky="B"):
-    W,H=TILE_SIZE,TILE_SIZE*2
-    s=pygame.Surface((W,H),pygame.SRCALPHA)
-    pygame.draw.rect(s,mau_chinh,(0,0,W,H),border_radius=6)
-    pygame.draw.rect(s,mau_toi,(0,0,W,H),3,border_radius=6)
+def _ve_boss_du_phong(mau_chinh, mau_toi):
+    """Hàm này chỉ chạy nếu không tìm thấy file ảnh PNG"""
+    W, H = T, T*2
+    s = pygame.Surface((W, H), pygame.SRCALPHA)
+    pygame.draw.rect(s, mau_chinh, (0, 0, W, H), border_radius=6)
+    pygame.draw.rect(s, mau_toi, (0, 0, W, H), 3, border_radius=6)
     return s
 
-
 class Boss5(pygame.sprite.Sprite):
-    """Boss màn 5 — tụ lực + bắn cầu. Sống sót 60s thắng."""
-    TU_LUC_TIME = 120   # 2s tụ lực
-    BAN_COOLDOWN= 180   # 3s giữa các lần bắn
+    """Boss màn 5 — tụ lực + bắn cầu."""
+    TU_LUC_TIME = 120   
+    BAN_COOLDOWN= 180   
 
     def __init__(self, cot, hang):
         super().__init__()
-        self._surf = _ve_boss((140,20,160),(180,50,200),(90,10,110))
+        try:
+            img = pygame.image.load("tai_nguyen/hinh_anh/boss5.png").convert_alpha()
+            
+            # 1. CHỈNH KÍCH THƯỚC: Cho Boss to ra (ví dụ 2x2 ô cho ngầu)
+            # Thay vì (T, T*2), ta dùng (T*2, T*2) để giữ dáng Boss vuông vắn
+            size_moi = (T * 2, T * 2) 
+            self._surf = pygame.transform.scale(img, size_moi)
+            
+        except:
+            print("Lỗi nạp ảnh Boss")
+            # Tạo khối dự phòng nếu lỗi
+            self._surf = pygame.Surface((T*2, T*2)) 
+            self._surf.fill((255, 0, 0))
+
         self.image = self._surf.copy()
-        self.rect  = self.image.get_rect(topleft=(cot*T, hang*T))
-        self._dem     = 0
-        self._ban_cd  = self.BAN_COOLDOWN
-        self._tu_luc  = 0    # đang tụ lực (đếm xuống)
-        self._ban_sx  = 0    # tọa độ target khi bắn
-        self._ban_sy  = 0
-        self.can_ban  = False  # có quả cầu cần bắn không
+        
+        # 2. CHỈNH VỊ TRÍ: Để Boss đứng SÁT ĐẤT
+        # Thay vì topleft, ta dùng 'midbottom' (giữa - dưới)
+        # Nó sẽ đặt CHÂN của Boss vào đúng vị trí ô đất bạn đặt ký hiệu '5'
+        self.rect = self.image.get_rect(midbottom=(cot * T + T//2, hang * T + T))
+        
+        # Các biến khác giữ nguyên...
+        self._dem = 0
+        self._ban_cd = self.BAN_COOLDOWN
+        self._tu_luc = 0
+        self.can_ban = False 
 
     def chuan_bi_ban(self, target_x, target_y):
-        """Gọi từ man_choi khi cooldown hết."""
         self._tu_luc = self.TU_LUC_TIME
-        self._ban_sx = target_x
-        self._ban_sy = target_y
+        self._ban_sx = target_x; self._ban_sy = target_y
         self.can_ban = False
 
     def update(self):
         self._dem += 1
         if self._tu_luc > 0:
             self._tu_luc -= 1
-            # Flash khi tụ lực
+            # Hiệu ứng nháy khi tụ lực (vẫn hoạt động tốt trên ảnh PNG)
             a = int(150+105*abs(math.sin(self._tu_luc*0.15)))
             f = self._surf.copy()
             f.fill((80,0,80,80), special_flags=pygame.BLEND_RGBA_ADD)
             self.image = f; self.image.set_alpha(a)
-            if self._tu_luc == 0:
-                self.can_ban = True   # xong tụ lực → bắn
+            if self._tu_luc == 0: self.can_ban = True
         else:
             if self._ban_cd > 0: self._ban_cd -= 1
+            # Hiệu ứng mờ ảo nhẹ nhàng
             a = int(200+55*abs(math.sin(self._dem*0.04)))
             self.image = self._surf.copy()
             self.image.set_alpha(a)
 
-    def cham_nguoi(self, player_rect):
-        return False
+    def cham_nguoi(self, player_rect): return False
 
     def ve_thanh_thoi_gian(self, screen, cam_x, cam_y, con_lai, font):
-        sx = self.rect.centerx - cam_x
-        sy = self.rect.top     - cam_y - 24
+        sx, sy = self.rect.centerx - cam_x, self.rect.top - cam_y - 24
         BW, BH = 120, 12
         bx = sx - BW//2
         pygame.draw.rect(screen,(30,30,30),(bx,sy,BW,BH),border_radius=5)
@@ -71,44 +84,44 @@ class Boss5(pygame.sprite.Sprite):
 
 
 class Boss10(pygame.sprite.Sprite):
-    """Boss màn 10 — tụ lực + bắn cầu. 5 HP, kill trong 60s thắng."""
+    """Boss màn 10 — 10 HP."""
     SO_MAU_MAX  = 10
-    TU_LUC_TIME = 90    # 1.5s tụ lực
-    BAN_COOLDOWN= 120   # 2s giữa các lần bắn
+    TU_LUC_TIME = 90    
+    BAN_COOLDOWN= 120   
 
     def __init__(self, cot, hang):
         super().__init__()
-        self._surf = _ve_boss((160,20,20),(200,50,50),(100,10,10))
+        try:
+            img = pygame.image.load("tai_nguyen/hinh_anh/boss10.png").convert_alpha()
+            size_moi = (T * 2, T * 2) 
+            self._surf = pygame.transform.scale(img, size_moi)
+            
+        except:
+            print("Lỗi nạp ảnh Boss")
+            # Tạo khối dự phòng nếu lỗi
+            self._surf = pygame.Surface((T*2, T*2)) 
+            self._surf.fill((255, 0, 0))
+
         self.image = self._surf.copy()
-        self.rect  = self.image.get_rect(topleft=(cot*T, hang*T))
-        self._dem    = 0
-        self.mau     = self.SO_MAU_MAX
-        self._flash  = 0
+        self.rect = self.image.get_rect(midbottom=(cot * T + T//2, hang * T + T))
+        
+        # Các biến khác giữ nguyên...
+        self._dem = 0
         self._ban_cd = self.BAN_COOLDOWN
         self._tu_luc = 0
-        self._ban_sx = 0; self._ban_sy = 0
         self.can_ban = False
-
-    def chuan_bi_ban(self, target_x, target_y):
-        self._tu_luc = self.TU_LUC_TIME
-        self._ban_sx = target_x; self._ban_sy = target_y
-        self.can_ban = False
-
     def nhan_don(self):
-        """Chém -1 máu. Trả về True nếu chết."""
         if self.mau <= 0: return True
         self.mau -= 1
         self._flash = 14
         return self.mau <= 0
 
-    def da_chet(self):
-        return self.mau <= 0
-
-    def cham_nguoi(self, player_rect):
-        return False   # không tấn công
+    def da_chet(self): return self.mau <= 0
+    def cham_nguoi(self, player_rect): return False
 
     def update(self):
         self._dem += 1
+        # 1. Xử lý tụ lực
         if self._tu_luc > 0 and not self.da_chet():
             self._tu_luc -= 1
             a = int(150+105*abs(math.sin(self._tu_luc*0.2)))
@@ -117,12 +130,17 @@ class Boss10(pygame.sprite.Sprite):
             self.image = f; self.image.set_alpha(a)
             if self._tu_luc == 0: self.can_ban = True
             return
+        
         if not self.da_chet() and self._ban_cd > 0: self._ban_cd -= 1
+        
+        # 2. Hiệu ứng chết (mờ dần)
         if self.da_chet():
             cur = self.image.get_alpha() or 255
             self.image.set_alpha(max(0, cur-8))
             if cur <= 8: self.kill()
             return
+            
+        # 3. Hiệu ứng bị chém (nháy trắng) hoặc thở bình thường
         if self._flash > 0:
             self._flash -= 1
             f = self._surf.copy()
@@ -135,8 +153,7 @@ class Boss10(pygame.sprite.Sprite):
 
     def ve_thanh_mau(self, screen, cam_x, cam_y, font):
         if self.da_chet(): return
-        sx = self.rect.centerx - cam_x
-        sy = self.rect.top     - cam_y - 24
+        sx, sy = self.rect.centerx - cam_x, self.rect.top - cam_y - 24
         BW, BH = 130, 14
         bx = sx - BW//2
         pygame.draw.rect(screen,(40,10,10),(bx,sy,BW,BH),border_radius=5)

@@ -1,5 +1,5 @@
 # the_gioi/nen_tang.py
-import pygame
+import pygame, os
 from cai_dat import *
 
 def _khoi(mc, ms, mt, ky=""):
@@ -13,23 +13,84 @@ def _g(k,fn):
     if k not in _C: _C[k]=fn()
     return _C[k].copy()
 
+# ── Loader ảnh tile từ tai_nguyen/khoi/ ──────────────────
+_THU_MUC_KHOI = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "tai_nguyen", "khoi")
+
+_ANH_CACHE = {}  # {key: Surface}
+
+def _tai_anh_khoi(ten_file, xoay=0):
+    """Load ảnh tile từ tai_nguyen/khoi/, xoay nếu cần. Lazy cache."""
+    key = f"{ten_file}_{xoay}"
+    if key in _ANH_CACHE:
+        return _ANH_CACHE[key].copy()
+    path = os.path.join(_THU_MUC_KHOI, ten_file)
+    if os.path.isfile(path):
+        try:
+            img = pygame.image.load(path).convert_alpha()
+            img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
+            if xoay != 0:
+                img = pygame.transform.rotate(img, xoay)
+                # Sau khi xoay có thể to hơn tile, cắt về đúng kích thước
+                img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
+            _ANH_CACHE[key] = img
+            return img.copy()
+        except Exception:
+            pass
+    return None  # fallback về màu
+
+
+def _tile(ten_file, xoay=0, mau_fallback=(70,150,40)):
+    """Trả về Surface tile: ảnh nếu có, màu đơn nếu không."""
+    img = _tai_anh_khoi(ten_file, xoay)
+    if img:
+        return img
+    s = pygame.Surface((TILE_SIZE, TILE_SIZE))
+    s.fill(mau_fallback)
+    return s
+
+
 class NenTang(pygame.sprite.Sprite):
-    def __init__(self,c,r):
+    """'#' — Tile đất, dùng dat.png nếu có."""
+    def __init__(self, c, r):
         super().__init__()
-        self.image=_g("dat",lambda:_khoi((70,150,40),(100,190,60),(45,110,25)))
-        self.rect=self.image.get_rect(topleft=(c*TILE_SIZE,r*TILE_SIZE))
+        self.image = _g("dat", lambda: _tile("dat.png", mau_fallback=(70,150,40)))
+        self.rect  = self.image.get_rect(topleft=(c*TILE_SIZE, r*TILE_SIZE))
 
 class NenTangBoss(pygame.sprite.Sprite):
-    def __init__(self,c,r):
+    def __init__(self, c, r):
         super().__init__()
-        self.image=_g("boss",lambda:_khoi((70,70,85),(100,100,120),(40,40,55)))
-        self.rect=self.image.get_rect(topleft=(c*TILE_SIZE,r*TILE_SIZE))
+        self.image = _g("boss", lambda: _khoi((70,70,85),(100,100,120),(40,40,55)))
+        self.rect  = self.image.get_rect(topleft=(c*TILE_SIZE, r*TILE_SIZE))
 
 class KhucGo(pygame.sprite.Sprite):
-    def __init__(self,c,r):
+    def __init__(self, c, r):
         super().__init__()
-        self.image=_g("go",lambda:_khoi((150,95,35),(195,135,65),(105,60,18),"W"))
-        self.rect=self.image.get_rect(topleft=(c*TILE_SIZE,r*TILE_SIZE))
+        self.image = _g("go", lambda: _khoi((150,95,35),(195,135,65),(105,60,18),"W"))
+        self.rect  = self.image.get_rect(topleft=(c*TILE_SIZE, r*TILE_SIZE))
+
+# ── Tile cỏ ───────────────────────────────────────────────
+class TileCo(pygame.sprite.Sprite):
+    """'C' — Cỏ bình thường, dùng co.png."""
+    def __init__(self, c, r):
+        super().__init__()
+        self.image = _g("co", lambda: _tile("co.png", mau_fallback=(60,180,60)))
+        self.rect  = self.image.get_rect(topleft=(c*TILE_SIZE, r*TILE_SIZE))
+
+class TileCoTrai(pygame.sprite.Sprite):
+    """'T' — Cỏ xoay trái 90°."""
+    def __init__(self, c, r):
+        super().__init__()
+        self.image = _g("co_trai", lambda: _tile("co.png", xoay=90, mau_fallback=(60,180,60)))
+        self.rect  = self.image.get_rect(topleft=(c*TILE_SIZE, r*TILE_SIZE))
+
+class TileCoPhai(pygame.sprite.Sprite):
+    """'P' — Cỏ xoay phải 90° (tức là xoay -90°)."""
+    def __init__(self, c, r):
+        super().__init__()
+        self.image = _g("co_phai", lambda: _tile("co.png", xoay=-90, mau_fallback=(60,180,60)))
+        self.rect  = self.image.get_rect(topleft=(c*TILE_SIZE, r*TILE_SIZE))
 
 class Sach(pygame.sprite.Sprite):
     """Sách bám vào tường — W/S để trèo."""
