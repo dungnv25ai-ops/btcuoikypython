@@ -1,49 +1,90 @@
-# the_gioi/tinh_linh_dieu_khien.py
-import pygame, math
-from cai_dat import *
-# Import hàm _get để lấy ảnh png và hàm di chuyển
-from the_gioi.tinh_linh import _get, _di_chuyen_khong_xuyen
+# ============================================================
+#  the_gioi/tinh_linh_dieu_khien.py — Điều khiển Tinh Linh
+# ============================================================
 
-S = TILE_SIZE // 2   # 0.5 tile
+import pygame
+from cai_dat import *
+from the_gioi.tinh_linh import load_bo_anh_tinh_linh, _di_chuyen_khong_xuyen, S
 
 class TinhLinhDieuKhien:
-    """Wrapper cho tinh linh khi player hoán đổi vào điều khiển."""
+    """Class điều khiển Tinh Linh với hệ thống 60 khung hình động"""
     TOC_DO = 5
 
     def __init__(self, x, y):
-        self.x     = float(x)
-        self.y     = float(y)
-        self._dem  = 0
+        # 1. Vị trí và dữ liệu ảnh
+        self.x = float(x)
+        self.y = float(y)
+        self.data_anh = load_bo_anh_tinh_linh() 
         
-        # 1. Lấy ảnh gốc tinhlinh.png
-        anh_goc = _get().copy()
-        # 2. Vẽ đè viền vàng (độ dày 3px) lên trên để đánh dấu đang được điều khiển
-        pygame.draw.rect(anh_goc, (255, 220, 0, 255), (0, 0, S, S), 3, border_radius=8)
-        self.image = anh_goc
+        # 2. Quản lý trạng thái chuyển động
+        self.trang_thai = "DUNG_TRAI"  
+        self._dem_action = 0      
         
-        self.rect  = pygame.Rect(int(x), int(y), S, S)
+        # 3. Hình ảnh và Rect va chạm
+        self.image = self.data_anh[0]
+        self.rect = pygame.Rect(int(x), int(y), S, S)
 
-    # ... (Giữ nguyên vòng lặp update() và các hàm xử lý nút bên dưới của bạn) ...
     def update(self, ds_nen=None):
-        self._dem += 1
-        p  = pygame.key.get_pressed()
+        """Cập nhật logic mỗi khung hình game"""
+        p = pygame.key.get_pressed()
         mx = my = 0
-        if p[pygame.K_LEFT]  or p[pygame.K_a]: mx -= self.TOC_DO
-        if p[pygame.K_RIGHT] or p[pygame.K_d]: mx += self.TOC_DO
-        if p[pygame.K_UP]    or p[pygame.K_w]: my -= self.TOC_DO
-        if p[pygame.K_DOWN]  or p[pygame.K_s]: my += self.TOC_DO
 
-        self.x, self.y = _di_chuyen_khong_xuyen(
-            self.x, self.y, mx, my, S, ds_nen)
+        # --- BƯỚC 1: THU THẬP TẤT CẢ INPUT PHÍM BẤM ---
+        if p[pygame.K_LEFT] or p[pygame.K_a]:
+            mx -= self.TOC_DO
+        if p[pygame.K_RIGHT] or p[pygame.K_d]:
+            mx += self.TOC_DO
+        if p[pygame.K_UP] or p[pygame.K_w]: 
+            my -= self.TOC_DO
+        if p[pygame.K_DOWN] or p[pygame.K_s]: 
+            my += self.TOC_DO
+
+        trang_thai_moi = self.trang_thai
+
+        # --- BƯỚC 2: XỬ LÝ CHUYỂN ĐỔI TRẠNG THÁI CHUẨN XÁC ---
+        if mx < 0:
+            trang_thai_moi = "BAY_TRAI"   # Bấm trái -> Ảnh 1-15
+        elif mx > 0:
+            trang_thai_moi = "BAY_PHAI"   # Bấm phải -> Ảnh 31-45
+        elif my != 0:
+            trang_thai_moi = "BAY_TRAI"   # Chỉ bấm lên/xuống -> Dùng ảnh 1-15 theo yêu cầu
+        else:
+            # Khi người chơi dừng điều khiển hoàn toàn (mx == 0 và my == 0)
+            if self.trang_thai == "BAY_TRAI":
+                trang_thai_moi = "DUNG_TRAI"  # Dừng sau khi qua trái -> Ảnh 16-30
+            elif self.trang_thai == "BAY_PHAI":
+                trang_thai_moi = "DUNG_PHAI"  # Dừng sau khi qua phải -> Ảnh 46-60
+            elif self.trang_thai not in ["DUNG_TRAI", "DUNG_PHAI"]:
+                trang_thai_moi = "DUNG_TRAI"
+
+        # Nếu có sự thay đổi trạng thái di chuyển, đặt lại bộ đếm khung hình
+        if trang_thai_moi != self.trang_thai:
+            self.trang_thai = trang_thai_moi
+            self._dem_action = 0
+
+        # --- BƯỚC 3: TÍNH TOÁN INDEX VÀ CẬP NHẬT ẢNH (Vòng lặp tuần hoàn 15 ảnh) ---
+        v = self._dem_action % 15
+
+        if self.trang_thai == "BAY_TRAI":
+            idx = 0 + v    # Ảnh 1 -> 15 (Index từ 0 đến 14)
+        elif self.trang_thai == "DUNG_TRAI":
+            idx = 15 + v   # Ảnh 16 -> 30 (Index từ 15 đến 29)
+        elif self.trang_thai == "BAY_PHAI":
+            idx = 30 + v   # Ảnh 31 -> 45 (Index từ 30 đến 44)
+        elif self.trang_thai == "DUNG_PHAI":
+            idx = 45 + v   # Ảnh 46 -> 60 (Index từ 45 đến 59)
+        else:
+            idx = 15
+
+        self._dem_action += 1
+        
+        # Cập nhật hình ảnh từ tài nguyên gốc (Không vẽ đè viền vàng)
+        self.image = self.data_anh[idx]
+
+        # --- BƯỚC 4: DI CHUYỂN THỰC TẾ & XỬ LÝ VA CHẠM ---
+        self.x, self.y = _di_chuyen_khong_xuyen(self.x, self.y, mx, my, S, ds_nen)
         self.rect.topleft = (int(self.x), int(self.y))
 
     def ve(self, screen, cam_x, cam_y):
-        sx = int(self.x - cam_x)
-        sy = int(self.y - cam_y)
-        # Glow nhịp đập
-        r  = int(22+6*math.sin(self._dem*0.1))
-        a  = int(50+30*math.sin(self._dem*0.08))
-        g  = pygame.Surface((r*2,r*2),pygame.SRCALPHA)
-        pygame.draw.circle(g,(100,200,255,a),(r,r),r)
-        screen.blit(g,(sx-r+S//2, sy-r+S//2))
-        screen.blit(self.image,(sx,sy))
+        """Vẽ Tinh Linh lên màn hình theo vị trí Camera"""
+        screen.blit(self.image, (int(self.x - cam_x), int(self.y - cam_y)))

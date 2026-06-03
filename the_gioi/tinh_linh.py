@@ -2,28 +2,28 @@
 import pygame, math, time, os
 from cai_dat import *
 
-S = TILE_SIZE // 2   # 0.5 tile
+S = int(TILE_SIZE * 0.8)
 
-_SPRITE = None
-def _get():
-    global _SPRITE
-    if _SPRITE is None:
-        # Tìm đường dẫn từ file hiện tại lui về thư mục gốc -> tai_nguyen -> hinh_anh
+_BO_ANH_60=[]
+def load_bo_anh_tinh_linh():
+    global _BO_ANH_60
+    if not _BO_ANH_60:
         thu_muc_goc = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        duong_dan = os.path.join(thu_muc_goc, "tai_nguyen", "hinh_anh", "tinhlinh.png")
-        
-        try:
-            # Load ảnh png và thay đổi kích thước cho vừa với S
-            anh = pygame.image.load(duong_dan).convert_alpha()
-            _SPRITE = pygame.transform.scale(anh, (S, S))
-        except Exception as e:
-            print(f"Lỗi: Không tìm thấy ảnh {duong_dan}. Chi tiết: {e}")
-            # Đề phòng mất ảnh, tự động vẽ cục màu xanh thay thế
-            _SPRITE = pygame.Surface((S, S), pygame.SRCALPHA)
-            pygame.draw.rect(_SPRITE, (100, 200, 255), (0, 0, S, S), border_radius=8)
-            
-    return _SPRITE
-    # ... (Giữ nguyên phần code di chuyển bên dưới của bạn) ...
+        for i in range(1, 61):
+            ten_file = f"{i}.png" 
+            duong_dan = os.path.join(thu_muc_goc, "tai_nguyen", "hinh_anh","tinh_linh", ten_file)
+            try:
+                anh = pygame.image.load(duong_dan).convert_alpha()
+                _BO_ANH_60.append(pygame.transform.scale(anh, (S, S)))
+            except:
+                tam = pygame.Surface((S, S), pygame.SRCALPHA)
+                pygame.draw.rect(tam, (100, 200, 255, 100), (0, 0, S, S), border_radius=8)
+                _BO_ANH_60.append(tam)
+    return _BO_ANH_60
+
+def _get():
+    return load_bo_anh_tinh_linh()[0]
+
 def _di_chuyen_khong_xuyen(x, y, mx, my, size, ds_nen):
     """Di chuyển (mx,my) có collision trượt — dùng chung cho tinh linh."""
     if not ds_nen:
@@ -76,6 +76,12 @@ class TinhLinh:
         self._thoi_gian_dung   = 0.0
         self.PLATFORM_TIME     = 10.0   # giây đứng yên
 
+        # --- BỔ SUNG: DỮ LIỆU HOẠT ẢNH ĐỘNG CHO NPC ---
+        self.data_anh     = load_bo_anh_tinh_linh()
+        self.image        = self.data_anh[0]
+        self.trang_thai   = "DUNG_TRAI"
+        self._dem_action  = 0
+
     # ── Rect va chạm 1x1 khi là platform ─────────────────
     @property
     def rect(self):
@@ -113,7 +119,6 @@ class TinhLinh:
         return False
 
     def _bay_toi(self, wx, wy):
-        # Điều chỉnh đích để rect 1x1 nằm đúng chỗ click (căn giữa)
         self._dich_x        = float(wx) - S//2
         self._dich_y        = float(wy) - S//2
         self._dang_di_chuyen= True
@@ -130,6 +135,9 @@ class TinhLinh:
             self.da_trigger = True; self.kich_hoat_thoai()
         if self.dang_noi and time.time()-self.thoi_gian_bat >= self.thoi_luong:
             self.dang_noi = False
+
+        # Biến tạm lưu trữ vận tốc thực tế để tính toán góc nhìn của hoạt ảnh
+        mx = my = 0
 
         if self._dang_di_chuyen:
             dx = self._dich_x - self.x
@@ -160,6 +168,44 @@ class TinhLinh:
             self.x, self.y = _di_chuyen_khong_xuyen(
                 self.x, self.y, mx, my, S, ds_nen)
 
+        # --- BỔ SUNG: HỆ THỐNG PHÂN PHỐI HOẠT ẢNH CHO NPC ---
+        trang_thai_moi = self.trang_thai
+
+        if mx < -0.1:
+            trang_thai_moi = "BAY_TRAI"
+        elif mx > 0.1:
+            trang_thai_moi = "BAY_PHAI"
+        elif abs(my) > 0.1:
+            # Nếu chỉ lên/xuống (hoặc dao động dọc), ưu tiên dùng ảnh 1-15
+            trang_thai_moi = "BAY_TRAI"
+        else:
+            # Khi đứng yên hoàn toàn hoặc tốc độ dịch chuyển không đáng kể
+            if self.trang_thai == "BAY_TRAI":
+                trang_thai_moi = "DUNG_TRAI"
+            elif self.trang_thai == "BAY_PHAI":
+                trang_thai_moi = "DUNG_PHAI"
+            elif self.trang_thai not in ["DUNG_TRAI", "DUNG_PHAI"]:
+                trang_thai_moi = "DUNG_TRAI"
+
+        if trang_thai_moi != self.trang_thai:
+            self.trang_thai = trang_thai_moi
+            self._dem_action = 0
+
+        v = self._dem_action % 15
+        if self.trang_thai == "BAY_TRAI":
+            idx = 0 + v    # Ảnh 1-15 (index 0-14)
+        elif self.trang_thai == "DUNG_TRAI":
+            idx = 15 + v   # Ảnh 16-30 (index 15-29)
+        elif self.trang_thai == "BAY_PHAI":
+            idx = 30 + v   # Ảnh 31-45 (index 30-44)
+        elif self.trang_thai == "DUNG_PHAI":
+            idx = 45 + v   # Ảnh 46-60 (index 45-59)
+        else:
+            idx = 15
+
+        self.image = self.data_anh[idx]
+        self._dem_action += 1
+
     def ve(self, screen, cam_x, cam_y, mw, mh):
         if not self.hien: return
         sx = int(self.x - cam_x)
@@ -170,15 +216,10 @@ class TinhLinh:
         g = pygame.Surface((rg*2,rg*2),pygame.SRCALPHA)
         pygame.draw.circle(g,(80,200,255,alpha),(rg,rg),rg)
         screen.blit(g,(sx-rg+S//2,sy-rg+S//2))
-        screen.blit(_get(),(sx,sy))
-        # Viền vàng khi là platform + đếm ngược
-        if self.la_platform:
-            pygame.draw.rect(screen,VANG,(sx,sy,S,S),3,border_radius=6)
-            con_lai = max(0.0, self.PLATFORM_TIME-(time.time()-self._thoi_gian_dung))
-            if not self.font_thoai:
-                self.font_thoai = pygame.font.SysFont(FONT_CHINH,16)
-            t = self.font_thoai.render(f"{con_lai:.1f}s",True,VANG)
-            screen.blit(t,(sx,sy-18))
+        
+        # ĐÃ SỬA: Vẽ tấm ảnh hoạt ảnh hiện tại (self.image) thay vì cố định _get()
+        screen.blit(self.image, (sx, sy))
+
         if self.dang_noi: self._ve_bong(screen,sx,sy,mw,mh)
 
     def _ve_bong(self,screen,sx,sy,mw,mh):

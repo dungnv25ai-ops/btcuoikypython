@@ -64,6 +64,18 @@ class HUD:
     def nhat_sao(self):
         self.sao = min(self.SO_SAO, self.sao + 1)
 
+    def ve_don_gian(self, screen):
+        """Màn 9: chỉ vẽ ngôi sao, không vẽ trái tim, không vẽ skill."""
+        w, h = screen.get_size()
+        _,_,sao_day,sao_trong = _get_sprites()
+        PAD = 10
+        SW  = sao_day.get_width()
+        tong_w = self.SO_SAO*(SW+4) - 4
+        sx0    = w - tong_w - PAD
+        for i in range(self.SO_SAO):
+            img = sao_day if i < self.sao else sao_trong
+            screen.blit(img, (sx0 + i*(SW+4), h - SW - PAD))
+
     def ve(self, screen, nhan_vat=None, man_choi=None):
         dang_tl = bool(man_choi and man_choi._dang_la_tinh_linh)
         w, h = screen.get_size()

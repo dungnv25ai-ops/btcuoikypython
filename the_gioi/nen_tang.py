@@ -70,6 +70,33 @@ class KhucGo(pygame.sprite.Sprite):
         self.image = _g("go", lambda: _khoi((150,95,35),(195,135,65),(105,60,18),"W"))
         self.rect  = self.image.get_rect(topleft=(c*TILE_SIZE, r*TILE_SIZE))
 
+# ── Loader ảnh lá từ tai_nguyen/hinh_anh/khoi/la/ ────────
+_THU_MUC_LA = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    'tai_nguyen',  'khoi', 'la')
+
+_ANH_LA = []   # list 60 Surface, load 1 lần
+
+def _load_anh_la():
+    """Load ảnh 1.png → 60.png từ tai_nguyen/hinh_anh/khoi/la/"""
+    global _ANH_LA
+    if _ANH_LA:
+        return _ANH_LA
+    if not os.path.isdir(_THU_MUC_LA):
+        return _ANH_LA
+    for i in range(1, 61):
+        path = os.path.join(_THU_MUC_LA, f"{i}.png")
+        if not os.path.isfile(path):
+            break
+        try:
+            img = pygame.image.load(path).convert_alpha()
+            img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
+            _ANH_LA.append(img)
+        except Exception:
+            pass
+    return _ANH_LA
+
+
 # ── Tile cỏ ───────────────────────────────────────────────
 class TileCo(pygame.sprite.Sprite):
     """'C' — Cỏ bình thường, dùng co.png."""
@@ -91,6 +118,47 @@ class TileCoPhai(pygame.sprite.Sprite):
         super().__init__()
         self.image = _g("co_phai", lambda: _tile("co.png", xoay=-90, mau_fallback=(60,180,60)))
         self.rect  = self.image.get_rect(topleft=(c*TILE_SIZE, r*TILE_SIZE))
+
+# ── Tile lá — hình ảnh trang trí phía trên khối C ────────
+class TileLa(pygame.sprite.Sprite):
+    """Sprite trang trí chồng lên trên tile C.
+    Animation ping-pong: 1→60→1→60... loop mãi.
+    Mỗi tile lá lệch pha nhau theo cột → không đồng bộ trông tự nhiên hơn.
+    Không có va chạm — chỉ là hình ảnh."""
+
+    # Mỗi ảnh hiển thị 2 game-frame → tốc độ thực 30 ảnh/giây ở 60fps
+    _SPD = 2
+
+    def __init__(self, c, r):
+        super().__init__()
+        # Rect ở hàng TRÊN tile C (r-1)
+        self.rect    = pygame.Rect(c*TILE_SIZE, (r-1)*TILE_SIZE, TILE_SIZE, TILE_SIZE)
+        self._anh_la = _load_anh_la()
+        self._dem    = 0
+        # Lệch pha theo cột (tính theo đơn vị ảnh, *_SPD để ra frame)
+        self._pha    = (c * 7) % max(1, len(self._anh_la)) if self._anh_la else 0
+        self.image   = self._lay_anh()
+
+    def _lay_anh(self):
+        """Ping-pong 1→60→1 ở tốc độ 30 ảnh/giây."""
+        anh = self._anh_la
+        if not anh:
+            s = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+            pygame.draw.rect(s, (60, 200, 60, 180),
+                             (0, TILE_SIZE//2, TILE_SIZE, TILE_SIZE//2),
+                             border_radius=4)
+            return s
+        n   = len(anh)                   # số ảnh thực tế (tối đa 60)
+        ck  = (n - 1) * 2                # chu kỳ ping-pong: 0→n-1→0
+        # _dem tăng mỗi game-frame, chia _SPD để ra chỉ số ảnh
+        v   = ((self._dem // self._SPD) + self._pha) % ck
+        idx = v if v < n else ck - v
+        return anh[idx]
+
+    def update(self):
+        self._dem += 1
+        self.image = self._lay_anh()
+
 
 class Sach(pygame.sprite.Sprite):
     """Sách bám vào tường — W/S để trèo."""
