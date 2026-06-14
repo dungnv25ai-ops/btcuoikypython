@@ -8,6 +8,7 @@ from cai_dat                  import *
 from man_hinh.menu            import Menu
 from man_hinh.chon_man        import ChonMan
 from man_hinh.man_choi        import ManChoi
+from tien_ich.am_thanh        import AmThanh
 from man_hinh.tro_choi_khac   import TroChoiKhac
 from man_hinh.thong_tin       import ThongTin
 from man_hinh.huong_dan       import HuongDan
@@ -203,6 +204,12 @@ def chay_game():
     cac_man    = tao_cac_man(man_hinh)
     trang_thai = TRANG_THAI_MENU
 
+    # Tạo AmThanh và gắn vào ManChoi
+    am_thanh = AmThanh()
+    cac_man[TRANG_THAI_CHOI].am_thanh = am_thanh
+    # Phát nhạc menu ngay khi khởi động
+    am_thanh.choi_nhac("menu")
+
     while True:
         man_hien_tai = cac_man[trang_thai]
 
@@ -238,7 +245,7 @@ def chay_game():
 
             trang_thai_moi = man_hien_tai.xu_ly_su_kien(su_kien)
 
-            # Khi chuyển sang màn chơi → báo số màn đã chọn
+            # Khi chuyển sang màn chơi từ chon_man
             if (trang_thai_moi == TRANG_THAI_CHOI
                     and trang_thai == TRANG_THAI_CHON_MAN):
                 so_man = cac_man[TRANG_THAI_CHON_MAN].lay_man_dang_chon()
@@ -246,6 +253,20 @@ def chay_game():
 
             if trang_thai_moi != trang_thai:
                 trang_thai = trang_thai_moi
+                # Chuyển nhạc theo màn
+                if trang_thai == TRANG_THAI_MENU:
+                    am_thanh.choi_nhac("menu")
+                elif trang_thai == TRANG_THAI_CHOI:
+                    so_man = cac_man[TRANG_THAI_CHOI].so_man
+                    if   so_man == 5:              am_thanh.choi_nhac("boss_5")
+                    elif so_man == 10:             am_thanh.choi_nhac("boss_10_p1")
+                    elif 1 <= so_man <= 4:         am_thanh.choi_nhac("man_1_4")
+                    elif 6 <= so_man <= 9:         am_thanh.choi_nhac("man_6_9")
+                elif trang_thai in (TRANG_THAI_CHON_MAN,
+                                    TRANG_THAI_THONG_TIN,
+                                    TRANG_THAI_HUONG_DAN,
+                                    TRANG_THAI_TRO_CHOI_KHAC):
+                    am_thanh.choi_nhac("menu")
 
         man_hien_tai.update()
         man_hien_tai.ve()

@@ -10,10 +10,10 @@
 import pygame
 import math
 from cai_dat import *
-from man_hinh.thong_tin import _ve_nut_back
+from tien_ich.nut_back import ve_nut_back as _ve_nut_back, ve_nen_chung
 from man_hinh.mapMC import lay_map_me_cung
 from man_hinh.mapPE import lay_map_pve
-from the_gioi.nen_tang  import NenTang, TileCo, ODict, TileLa
+from the_gioi.nen_tang  import NenTang, TileCo, ODict, TileLa, KhoiTanHinh, SaoMap
 from the_gioi.tinh_linh_dieu_khien import TinhLinhDieuKhien
 from the_gioi.vat_the   import Gai, KhoiNuoc
 from tien_ich.camera    import Camera
@@ -39,14 +39,17 @@ class ManChoiKhac:
     - PvE:     zoom full map (giống boss 5/10, chưa có boss riêng)
     """
     def __init__(self, man_hinh):
-        self.man_hinh = man_hinh
-        self.loai     = None   # 'me_cung' | 'pve'
-        self.so_man   = 1
-        self.hud      = HUD()
-        self.ket_qua  = ManKetQua()
-        self.hoi_thoai= HoiThoai()
-        self.thong_bao= ThongBao()
-        self.camera   = None
+        self.man_hinh   = man_hinh
+        self.loai       = None   # 'me_cung' | 'pve'
+        self.so_man     = 1
+        self.hud        = HUD()
+        self.ket_qua    = ManKetQua()
+        self.hoi_thoai  = HoiThoai()
+        self.thong_bao  = ThongBao()
+        self.camera     = None
+        self.tam_dung   = False
+        self.da_thang   = False
+        self._muc_pause = 0
         self._tao_font()
 
     def _tao_font(self):
@@ -72,6 +75,14 @@ class ManChoiKhac:
         else:
             ban_do = lay_map_pve(self.so_man)
 
+        if ban_do is None:
+            # Map chưa có — tạo map trống tối thiểu để không crash
+            ban_do = [
+                "####",
+                "#P *",
+                "####",
+            ]
+
         self.ban_do  = ban_do
         self.ds_nen  = pygame.sprite.Group()
         self.ds_dich = pygame.sprite.Group()
@@ -86,10 +97,11 @@ class ManChoiKhac:
         for ri, hang in enumerate(ban_do):
             for ci, o in enumerate(hang):
                 if   o == '#': self.ds_nen.add(NenTang(ci, ri))
+                elif o == 'T': self.ds_nen.add(KhoiTanHinh(ci, ri))
                 elif o == 'C': self.ds_nen.add(TileCo(ci, ri))
                 elif o == '~': self.ds_nuoc.add(KhoiNuoc(ci, ri))
                 elif o == 'R': self.ds_roi.add(Gai(ci, ri))
-                elif o == '$': self.ds_sao.add(_SaoMap(ci, ri))
+                elif o == '$': self.ds_sao.add(SaoMap(ci, ri))
                 elif o == '*': self.ds_dich.add(ODict(ci, ri))
                 elif o == 'P': sx, sy = ci, ri
 
@@ -322,32 +334,6 @@ class ManChoiKhac:
 # ══════════════════════════════════════════════════════════
 #  Sao trên map (copy nhẹ từ man_choi)
 # ══════════════════════════════════════════════════════════
-class _SaoMap(pygame.sprite.Sprite):
-    def __init__(self, c, r):
-        super().__init__()
-        S = TILE_SIZE
-        self._dem  = 0
-        self.image = pygame.Surface((S, S), pygame.SRCALPHA)
-        self.rect  = self.image.get_rect(topleft=(c*S, r*S))
-        self._ve()
-
-    def _ve(self):
-        S = TILE_SIZE; cx = cy = S//2
-        pts = []
-        for i in range(10):
-            a  = math.radians(-90 + i*36)
-            ri = cx-4 if i%2==0 else cx//2
-            pts.append((cx+ri*math.cos(a), cy+ri*math.sin(a)))
-        self.image.fill((0,0,0,0))
-        pygame.draw.polygon(self.image, (255,215,0), pts)
-        pygame.draw.polygon(self.image, (255,255,120), pts, 2)
-
-    def update(self):
-        self._dem += 1
-        self.image.set_alpha(int(180+75*abs(math.sin(self._dem*0.06))))
-
-
-# ══════════════════════════════════════════════════════════
 #  TroChoiKhac — màn hình chính (menu chọn loại + chọn màn)
 # ══════════════════════════════════════════════════════════
 class TroChoiKhac:
@@ -360,7 +346,6 @@ class TroChoiKhac:
         self._r_man    = []
         self._r_back   = None
         self._game     = ManChoiKhac(man_hinh)
-        self._game._muc_pause = 0
 
     def _tao_font(self):
         w, h = self.man_hinh.get_size()
@@ -386,7 +371,7 @@ class TroChoiKhac:
 
         w, h = self.man_hinh.get_size()
         self._tao_font()
-        self.man_hinh.fill((18, 18, 40))
+        ve_nen_chung(self.man_hinh)
 
         if self._lop == _LOP_CHON_LOAI:
             self._ve_chon_loai(w, h)

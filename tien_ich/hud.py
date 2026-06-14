@@ -64,6 +64,19 @@ class HUD:
     def nhat_sao(self):
         self.sao = min(self.SO_SAO, self.sao + 1)
 
+    def sao_theo_mang(self):
+        """Dùng cho màn boss (5, 10): số sao tính theo số mạng còn lại,
+        không nhặt sao trên map.
+        5 mạng -> 3 sao | 3-4 mạng -> 2 sao | 2 mạng -> 1 sao | 1 mạng -> 0 sao."""
+        if self.tim >= 5:
+            return 3
+        elif self.tim >= 3:
+            return 2
+        elif self.tim >= 2:
+            return 1
+        else:
+            return 0
+
     def ve_don_gian(self, screen):
         """Màn 9: chỉ vẽ ngôi sao, không vẽ trái tim, không vẽ skill."""
         w, h = screen.get_size()
@@ -269,48 +282,38 @@ class HUD:
         screen.blit(t,(bx+SZ-t.get_width()-3,by+2))
 
     def _ve_ky_nang_giap(self, screen, mc, w, h):
-        """Icon giáp bất tử — slot 3 góc dưới trái."""
+        """Icon giáp bất tử Q — slot 3 góc dưới trái.
+        Chỉ hiện thời gian hồi chiêu, không hiện trạng thái bất tử/phát sáng."""
         if not hasattr(self,'_font_giap'):
             self._font_giap = pygame.font.SysFont(FONT_CHINH,13,bold=True)
         SZ=44; PAD=10
-        # Slot 3: bx = PAD + (SZ+10)*2
         bx = PAD + (SZ+10)*2; by = h-SZ-PAD
 
-        active = mc._giap_active
         cd     = mc._giap_cd
         cd_max = mc.GIAP_CD
 
         pygame.draw.rect(screen,(15,15,40),(bx,by,SZ,SZ),border_radius=8)
         # Icon khiên
         cx,cy=bx+SZ//2,by+SZ//2
-        mau=(80,200,255) if active else (80,80,130) if cd>0 else (120,220,255)
+        mau=(120,220,255) if cd <= 0 else (80,80,130)
         pygame.draw.polygon(screen,mau,[
             (cx,by+4),(cx+16,cy-4),(cx+16,cy+8),(cx,by+SZ-4),(cx-16,cy+8),(cx-16,cy-4)])
         pygame.draw.polygon(screen,(200,240,255),[
             (cx,by+4),(cx+16,cy-4),(cx+16,cy+8),(cx,by+SZ-4),(cx-16,cy+8),(cx-16,cy-4)],2)
 
-        # Overlay cooldown
-        if cd > 0 and not active:
-            tl=cd/cd_max
-            ov=pygame.Surface((SZ,SZ),pygame.SRCALPHA)
-            ov.fill((0,0,0,150))
-            screen.blit(ov,(bx,by))
-            t=self._font_giap.render(f"{cd//60}s",True,TRANG)
-            screen.blit(t,t.get_rect(center=(bx+SZ//2,by+SZ//2)))
+        # Overlay cooldown (giống E/F)
+        if cd > 0:
+            pix = int(SZ * cd / cd_max)
+            ov  = pygame.Surface((SZ, pix), pygame.SRCALPHA)
+            ov.fill((0,0,0,160))
+            screen.blit(ov,(bx, by+SZ-pix))
+            giay = cd / FPS
+            t = self._font_giap.render(f"{giay:.1f}s", True, TRANG)
+            screen.blit(t, t.get_rect(center=(bx+SZ//2, by+SZ//2)))
 
-        # Active: glow
-        if active:
-            r=int(24+4*math.sin(mc._giap_timer*0.3))
-            g=pygame.Surface((r*2,r*2),pygame.SRCALPHA)
-            pygame.draw.circle(g,(100,220,255,60),(r,r),r)
-            screen.blit(g,(bx+SZ//2-r,by+SZ//2-r))
-            t=self._font_giap.render(f"{mc._giap_timer//60+1}s",True,(100,220,255))
-            screen.blit(t,t.get_rect(center=(bx+SZ//2,by+SZ-10)))
-
-        vien=(80,200,255) if active else (60,60,100)
-        pygame.draw.rect(screen,vien,(bx,by,SZ,SZ),2,border_radius=8)
+        mau_vien = (255,215,0) if cd <= 0 else (80,80,100)
+        pygame.draw.rect(screen,mau_vien,(bx,by,SZ,SZ),2,border_radius=8)
         t=self._font_giap.render("Q",True,(160,180,220))
         screen.blit(t,(bx+SZ-t.get_width()-3,by+2))
-        lbl=self._font_giap.render("Giap" if not active else "BAT TU",
-                                    True,(80,200,255) if active else (120,130,160))
+        lbl=self._font_giap.render("Giap", True,(140,160,200))
         screen.blit(lbl,lbl.get_rect(center=(bx+SZ//2,by+SZ+10)))

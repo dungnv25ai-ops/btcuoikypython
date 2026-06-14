@@ -132,7 +132,7 @@ class HoiThoai:
         # Gợi ý Enter
         if self._xong_dong:
             a = int(180 + 75*abs(math.sin(pygame.time.get_ticks()*0.004)))
-            ky = "▶ Tiếp" if self._index < len(self._cac_dong)-1 else "▶ Đóng"
+            ky = "Tiếp" if self._index < len(self._cac_dong)-1 else "Đóng"
             t_hint = self._font_ten.render(ky, True, (180, 180, 220))
             t_hint.set_alpha(a)
             screen.blit(t_hint, (w - t_hint.get_width() - PAD,

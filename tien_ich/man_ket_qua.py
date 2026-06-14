@@ -32,12 +32,12 @@ class ManKetQua:
     # ── Lấy danh sách nút theo trạng thái ─────────────────
     def _lay_labels(self):
         if self.thang:
-            labs = [("Choi lai","choi_lai")]
+            labs = [("Chơi lại","choi_lai")]
             if self.so_man < 10:
                 labs.append((f"Man {self.so_man+1}","man_tiep"))
-            labs.append(("Man chinh","man_chinh"))
+            labs.append(("Trang chủ","man_chinh"))
         else:
-            labs = [("Choi lai","choi_lai"),("Man chinh","man_chinh")]
+            labs = [("Chơi lại","choi_lai"),("Trang chủ","man_chinh")]
         return labs
 
     # ── Tính rect các nút (dùng chung cho vẽ và click) ────

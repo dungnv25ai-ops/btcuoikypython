@@ -1,7 +1,7 @@
 # man_hinh/chon_man.py
 import pygame
 from cai_dat import *
-from man_hinh.thong_tin import _ve_nut_back
+from tien_ich.nut_back import ve_nut_back as _ve_nut_back, ve_nen_chung
 
 
 class ChonMan:
@@ -25,7 +25,7 @@ class ChonMan:
 
     def ve(self):
         w, h = self.man_hinh.get_size()
-        self.man_hinh.fill((18, 18, 40))
+        ve_nen_chung(self.man_hinh)
         self.cac_rect = []
 
         # Nút quay lại góc trên trái

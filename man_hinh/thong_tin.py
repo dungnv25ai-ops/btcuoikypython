@@ -1,14 +1,15 @@
 # man_hinh/thong_tin.py
 import pygame
 from cai_dat import *
+from tien_ich.nut_back import ve_nut_back as _ve_nut_back, ve_nen_chung
 
 NOI_DUNG = [
     ("Tên trò chơi",  TEN_GAME),
-    ("Thể loại",      "LOST IN TIME - Quá Khử Lãng Quên"),
+    ("Thể loại",      "2D-platformer, phiêu lưu, hành động, giải đố, nhập vai"),
     ("Công cụ",       "Python 3 + Pygame"),
-    ("Số màn chơi",   "10 man  (Boss o man 5 va 10)"),
-    ("Phiên bản",     "v0.1  Prototype"),
-    ("Lập trình",     "Sinh vien nam 1"),
+    ("Số màn chơi",   "10 màn  (Boss ở màn 5 và màn 10)"),
+    ("Phiên bản",     "v1.0(demo)"),
+    ("Lập trình",     "Nguyễn Văn Dũng - 25AI008"),
 ]
 
 def _ve_nut_back(screen, font):
@@ -43,13 +44,13 @@ class ThongTin:
     def ve(self):
         w, h = self.man_hinh.get_size()
         self._tao_font()
-        self.man_hinh.fill((18, 18, 40))
+        ve_nen_chung(self.man_hinh)
 
         # Nút quay lại góc trên trái
         self._r_back = _ve_nut_back(self.man_hinh, self.font_nho)
 
         # Tiêu đề
-        tieu = self.font_tieude.render("Thong Tin Tro Choi", True, VANG)
+        tieu = self.font_tieude.render("Thông tin trò chơi", True, VANG)
         ty = h // 10
         self.man_hinh.blit(tieu, tieu.get_rect(center=(w//2, ty)))
         pygame.draw.line(self.man_hinh, (60,60,120),

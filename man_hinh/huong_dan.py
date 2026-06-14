@@ -1,7 +1,7 @@
 # man_hinh/huong_dan.py
 import pygame
 from cai_dat import *
-from man_hinh.thong_tin import _ve_nut_back
+from tien_ich.nut_back import ve_nut_back as _ve_nut_back, ve_nen_chung
 
 CAC_MUC_HUONG_DAN = [
     ("DI CHUYỂN",  [
@@ -42,7 +42,7 @@ class HuongDan:
 
     def ve(self):
         w, h = self.man_hinh.get_size()
-        self.man_hinh.fill((18, 18, 40))
+        ve_nen_chung(self.man_hinh)
 
         # Nút quay lại góc trên trái
         self._r_back = _ve_nut_back(self.man_hinh, self.font_nho)

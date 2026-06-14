@@ -67,7 +67,7 @@ class NenTangBoss(pygame.sprite.Sprite):
 class KhucGo(pygame.sprite.Sprite):
     def __init__(self, c, r):
         super().__init__()
-        self.image = _g("go", lambda: _khoi((150,95,35),(195,135,65),(105,60,18),"W"))
+        self.image = _g("go", lambda: _tile("go.png", mau_fallback=(150, 95, 35)))
         self.rect  = self.image.get_rect(topleft=(c*TILE_SIZE, r*TILE_SIZE))
 
 # ── Loader ảnh lá từ tai_nguyen/hinh_anh/khoi/la/ ────────
@@ -106,18 +106,58 @@ class TileCo(pygame.sprite.Sprite):
         self.rect  = self.image.get_rect(topleft=(c*TILE_SIZE, r*TILE_SIZE))
 
 class TileCoTrai(pygame.sprite.Sprite):
-    """'T' — Cỏ xoay trái 90°."""
+    """Giữ lại để không crash nếu còn import cũ — không dùng nữa."""
     def __init__(self, c, r):
         super().__init__()
-        self.image = _g("co_trai", lambda: _tile("co.png", xoay=90, mau_fallback=(60,180,60)))
+        self.image = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
         self.rect  = self.image.get_rect(topleft=(c*TILE_SIZE, r*TILE_SIZE))
 
 class TileCoPhai(pygame.sprite.Sprite):
-    """'P' — Cỏ xoay phải 90° (tức là xoay -90°)."""
+    """Giữ lại để không crash nếu còn import cũ — không dùng nữa."""
     def __init__(self, c, r):
         super().__init__()
-        self.image = _g("co_phai", lambda: _tile("co.png", xoay=-90, mau_fallback=(60,180,60)))
+        self.image = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
         self.rect  = self.image.get_rect(topleft=(c*TILE_SIZE, r*TILE_SIZE))
+
+
+# ── Khối tàng hình ────────────────────────────────────────
+class KhoiTanHinh(pygame.sprite.Sprite):
+    """'T' — Khối tàng hình: hoàn toàn trong suốt, có va chạm đầy đủ
+    (nhân vật đứng được, không thể đi xuyên, không thể leo).
+    Chỉ vào ds_nen, không vào ds_vat hay ds_dc."""
+    def __init__(self, c, r):
+        super().__init__()
+        self.image = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+        self.rect  = self.image.get_rect(topleft=(c*TILE_SIZE, r*TILE_SIZE))
+
+
+# ── Sao trên map ──────────────────────────────────────────
+import math as _math
+
+class SaoMap(pygame.sprite.Sprite):
+    """Ngôi sao nhấp nháy trên map, ký hiệu '$'."""
+    def __init__(self, c, r):
+        super().__init__()
+        S = TILE_SIZE
+        self._dem = 0
+        self.image = pygame.Surface((S, S), pygame.SRCALPHA)
+        self.rect  = self.image.get_rect(topleft=(c*S, r*S))
+        self._ve()
+
+    def _ve(self):
+        S = TILE_SIZE; cx = cy = S // 2
+        pts = []
+        for i in range(10):
+            a  = _math.radians(-90 + i*36)
+            ri = cx - 4 if i % 2 == 0 else cx // 2
+            pts.append((cx + ri*_math.cos(a), cy + ri*_math.sin(a)))
+        self.image.fill((0, 0, 0, 0))
+        pygame.draw.polygon(self.image, (255, 215, 0), pts)
+        pygame.draw.polygon(self.image, (255, 255, 120), pts, 2)
+
+    def update(self):
+        self._dem += 1
+        self.image.set_alpha(int(180 + 75*abs(_math.sin(self._dem*0.06))))
 
 # ── Tile lá — hình ảnh trang trí phía trên khối C ────────
 class TileLa(pygame.sprite.Sprite):

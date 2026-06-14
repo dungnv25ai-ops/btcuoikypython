@@ -13,45 +13,68 @@
 THOAI_MAN = {
 
     1: [
-        ("", "Nhập nội dung thoại màn 1 dòng 1 vào đây."),
-        ("", "Nhập nội dung thoại màn 1 dòng 2 vào đây."),
+        ("Tinh Linh", "Này, tỉnh lại đi, bạn có sao không?"),
+        ("NGười chơi", "Đây là đâu? Mà sao tôi lại ở đây?"),
+        ("Tinh Linh", "Rơi từ trên trời xuống mà xông mất mạng, đúng là phi thường. Mà bạn còn nhớ mình là ai không vậy?"),
+        ("NGười chơi", "Tôi... tôi hình như không nhớ gì cả."),
+        ("Tinh Linh", "Mà theo tui thấy không lầm thì bạn bay từ hướng kia tới đây, có lẽ bạn nên tới đó thử biết đâu có người quen"),
+        ("Tinh Linh", "Mà nếu bạn không phiền chúng ta có thể cùng nhau đến đó, vì tôi cũng có việc đi đến hướng đó."),
+        ("NGười chơi", "Vậy phiền bạn cùng tôi đi đến đó nhé! Mà bạn tên gì nhỉ?"),
+        ("SaSaKi(Tinh Linh)", "Tôi là SaSiKi, mà bạn hình như bạn không nhớ tên đúng không, vậy tui sẽ gọi bạn là KiKiSa nhé?"),
+        ("KiKiSa(NGười chơi)", "KiKiSa nghe cũng hay đấy! Cảm ơn bạn đã giúp tôi, SaSiKi!"),
     ],
 
     2: [
-        ("", "Nhập nội dung thoại màn 2 dòng 1 vào đây."),
+        ("SaSaKi(Tinh Linh)", "Nhìn kia phía trước có 1 cây kiếm, mà bạn hình như cũng không có vũ khí nhặt nó lên và sài thử xem."),
+        ("KiKiSa(NGười chơi)", "Nhặt kiếm như vậy, liệu có ổn không?."),
+        ("SaSaKi(Tinh Linh)", "Mà gần đây cũng chắc có, ai chắc là 1 cây kiếm vô chủ thôi."),
+        ("SaSaKi(Tinh Linh)", "Mà cũng cũng hay phía trước cũng có mấy con slime bạn cầm thử kiếm rồi làm vài đường xem có thuận tay không."),
     ],
 
     3: [
-        ("", "Nhập nội dung thoại màn 3 dòng 1 vào đây."),
-        ("Tinh Linh", "Nhập nội dung thoại màn 3 dòng 2 vào đây."),
+        ("KiKiSa(NGười chơi)", "Nhìn kìa đằng  kia có 1 cuốn sách ở dưới đất"),
+        ("SaSaKi(Tinh Linh)", "Ở đâu, à thấy rồi, mắt cũng tinh ghê."),
+        ("SaSaKi(Tinh Linh)", "Lại nhặt thử biết đâu là 1 cuốn sách bí kiếp gì đó."),
     ],
 
     4: [
-        ("", "Nhập nội dung thoại màn 4 dòng 1 vào đây."),
+        ("KiKiSa(NGười chơi)", "Phía trước hình như có 1 ngôi nhà, ngôi nhà này là của ai nhỉ?"),
+        ("SaSaKi(Tinh Linh)", "Hm Hm! Xin giới thiệu với bạn ngôi nhà phía trước là của Đại Tinh Linh, người bảo vệ của khu rừng này"),  
+        ("SaSaKi(Tinh Linh)", "Để vào nhà xem có gì?"),  
+        ("KiKiSa(NGười chơi)", "Vào nhà của người khác, khi họ vắng nhà là không tốt đâu."),
     ],
 
     5: [
-        ("", "Nhập nội dung thoại màn 5 (boss) vào đây."),
+        ("KiKiSa(NGười chơi)", "Tới nơi rồi, cậu hình như bay từ bên kia qua."),
+        ("SaSaKi(Tinh Linh)", "Mà hình như bên kia cũng có người thì phải?"),
+        ("KiKiSa(NGười chơi)", "Bộ cậu không nhìn ra sao, đó là Đại Tinh Linh mà lúc trước tớ đã nhắt."),
+        ("SaSaKi(Tinh Linh)", "Đ"),        
+        ("KiKiSa(NGười chơi)", "Tới nơi rồi, cậu hình như bay từ bên kia qua."),
+        ("SaSaKi(Tinh Linh)", "Mà hình như bên kia cũng có người thì phải?"),    
     ],
 
     6: [
-        ("", "Nhập nội dung thoại màn 6 vào đây."),
+        ("KiKiSa(NGười chơi)", "Nhập nội dung thoại màn 6 vào đây."),
     ],
 
     7: [
-        ("", "Nhập nội dung thoại màn 7 vào đây."),
+        ("KiKiSa(NGười chơi)", "Nhập nội dung thoại màn 7 vào đây."),
+        ("SaSaKi(Tinh Linh)", "Nhập nội dung thoại màn 7 dòng 2 vào đây."),
     ],
 
     8: [
-        ("", "Nhập nội dung thoại màn 8 vào đây."),
+        ("KiKiSa(NGười chơi)", "Nhập nội dung thoại màn 8 vào đây."),
+        ("SaSaKi(Tinh Linh)", "Nhập nội dung thoại màn 8 dòng 2 vào đây."), 
     ],
 
     9: [
-        ("", "Nhập nội dung thoại màn 9 vào đây."),
+        ("KiKiSa(NGười chơi)", "Nhập nội dung thoại màn 9 vào đây."),
+        ("SaSaKi(Tinh Linh)", "Nhập nội dung thoại màn 9 dòng 2 vào đây."), 
     ],
 
     10: [
-        ("", "Nhập nội dung thoại màn 10 (boss cuối) vào đây."),
+        ("KiKiSa(NGười chơi)", "Nhập nội dung thoại màn 10 (boss cuối) vào đây."),
+        ("SaSaKi(Tinh Linh)", "Nhập nội dung thoại màn 10 dòng 2 vào đây."),
     ],
 
 }
@@ -62,25 +85,12 @@ THONG_BAO_VAT = {
     # Khi nhặt Kiếm
     "kiem": (
         "Nhặt được Kiếm!",
-        "Nhập nội dung thông báo khi nhặt kiếm vào đây.",
+        "Bạn có thể nhấn F để tấn công.",
     ),
 
     # Khi nhặt Sách (mở khoá Dash)
     "sach": (
         "Nhặt được Sách!",
-        "Nhập nội dung thông báo khi nhặt sách vào đây.",
+        "Bạn có thể nhấn E để sử dụng kỹ năng lướt tới 1 đoạn ngắn.",
     ),
-
-    # Khi nhặt Sao
-    "sao": (
-        "Nhặt được Sao!",
-        "Nhập nội dung thông báo khi nhặt sao vào đây.",
-    ),
-
-    # Khi nhặt Kiếm rơi từ boss (skill F)
-    "kiem_boss": (
-        "Nhặt được Kiếm Boss!",
-        "Nhập nội dung thông báo khi nhặt kiếm boss vào đây.",
-    ),
-
 }

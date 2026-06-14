@@ -48,7 +48,7 @@ def _ve_nuoc(dem=0):
     global _CACHE_NUOC
     T = TILE_SIZE
     if not _CACHE_NUOC:
-        for i in range(1, 152):
+        for i in range(1, 61):
             try:
                 img = pygame.image.load(
                     f"tai_nguyen/khoi/nuoc/{i}.png").convert_alpha()
