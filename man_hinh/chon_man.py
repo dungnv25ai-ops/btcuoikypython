@@ -1,8 +1,7 @@
-# man_hinh/chon_man.py
+                      
 import pygame
 from cai_dat import *
 from tien_ich.nut_back import ve_nut_back as _ve_nut_back, ve_nen_chung
-
 
 class ChonMan:
     def __init__(self, man_hinh):
@@ -28,14 +27,11 @@ class ChonMan:
         ve_nen_chung(self.man_hinh)
         self.cac_rect = []
 
-        # Nút quay lại góc trên trái
         self._r_back = _ve_nut_back(self.man_hinh, self.font_nhan)
 
-        tieu = self.font_tieude.render("Chon Man Choi", True, VANG)
+        tieu = self.font_tieude.render("Màn chơi", True, VANG)
         ty   = h // 12
         self.man_hinh.blit(tieu, tieu.get_rect(center=(w//2, ty)))
-        pygame.draw.line(self.man_hinh, (60,60,120),
-                         (w//2-180, ty+22), (w//2+180, ty+22), 1)
 
         COT, HANG = 5, 2
         le_trai = w*0.07; le_phai = w*0.07
@@ -76,11 +72,11 @@ class ChonMan:
             pygame.draw.rect(self.man_hinh, mau_vien, r, day, border_radius=10)
 
             mau_so = (255,90,90) if boss_cuoi else (255,180,60) if la_boss else TRANG
-            t_so   = self.font_so.render(f"Man {so_man}", True, mau_so)
+            t_so   = self.font_so.render(f"Màn {so_man}", True, mau_so)
             self.man_hinh.blit(t_so, t_so.get_rect(center=r.center))
 
             if boss_cuoi:
-                nb = self.font_nhan.render("BOSS CUOI", True, (255,80,80))
+                nb = self.font_nhan.render("BOSS", True, (255,80,80))
                 self.man_hinh.blit(nb, nb.get_rect(
                     center=(r.centerx, r.bottom-int(o_r*0.18))))
             elif la_boss:

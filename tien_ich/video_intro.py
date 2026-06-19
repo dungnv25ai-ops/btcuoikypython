@@ -1,15 +1,14 @@
-# tien_ich/video_intro.py
+                         
 import os
 import pygame
 from cai_dat import *
 
-
 class VideoIntro:
-    """Phát video intro từ tai_nguyen/video/intro_001.png..."""
+
     _THU_MUC = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         "tai_nguyen", "video")
-    _SPDF = 3   # số frame game mỗi ảnh video
+    _SPDF = 3                                
 
     def __init__(self):
         self.hien    = False

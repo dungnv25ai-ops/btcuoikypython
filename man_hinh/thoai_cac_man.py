@@ -1,15 +1,4 @@
-# ============================================================
-#  man_hinh/thoai_cac_man.py — Nội dung hội thoại từng màn
-#
-#  Loại 1 — HoiThoai (hộp đen, khi bắt đầu màn):
-#    THOAI_MAN[so_man] = [(ten, noi_dung), ...]
-#    ten = "" nếu không có tên nhân vật
-#
-#  Loại 2 — ThongBao (nổi giữa, khi nhặt vật):
-#    THONG_BAO_VAT[ten_vat] = (tieu_de, noi_dung)
-# ============================================================
-
-# ── Loại 1: Hội thoại đầu màn ────────────────────────────
+                                                              
 THOAI_MAN = {
 
     1: [
@@ -45,52 +34,44 @@ THOAI_MAN = {
     ],
 
     5: [
-        ("KiKiSa(NGười chơi)", "Tới nơi rồi, cậu hình như bay từ bên kia qua."),
-        ("SaSaKi(Tinh Linh)", "Mà hình như bên kia cũng có người thì phải?"),
-        ("KiKiSa(NGười chơi)", "Bộ cậu không nhìn ra sao, đó là Đại Tinh Linh mà lúc trước tớ đã nhắt."),
-        ("SaSaKi(Tinh Linh)", "Đ"),        
-        ("KiKiSa(NGười chơi)", "Tới nơi rồi, cậu hình như bay từ bên kia qua."),
-        ("SaSaKi(Tinh Linh)", "Mà hình như bên kia cũng có người thì phải?"),    
+        ("SaSaKi(Tinh Linh)", "Tới nơi rồi, mà hình như cậu bay từ bên kia qua."),
+        ("KiKiSa(NGười chơi)", "Mà hình như bên kia cũng có người thì phải?"),
+        ("SaSaKi(Tinh Linh)", "Bộ cậu không nhìn ra sao, đó là Đại Tinh Linh mà lúc trước tớ đã nhắt."),
+        ("KiKiSa(NGười chơi)", "Mà sao Đại Tinh Linh lại ở đây?"),        
+        ("SaSaKi(Tinh Linh)", "Đương nhiên là để tránh các sinh vật nguy hiểm từ khu rừng bên kia đi vào khu rừng này"),
+        ("SaSaKi(Tinh Linh)", "Mà cậu rơi từ bên kia qua, lại hỏi Đại Tinh Linh xem có manh mối gì không?"),
+        ("","Chưa kịp hỏi Đại Tinh Linh đã ra tay tấn công KiKiSa"),    
     ],
 
     6: [
-        ("KiKiSa(NGười chơi)", "Nhập nội dung thoại màn 6 vào đây."),
+        ("","Đang trong trận chiến đột 1 vết nứt hút KiKiSa vào trong đó"),
+        ("KiKiSa(NGười chơi)","Lại rơi vào 1 chổ nào đây? Đi đại xem có đường thoát không"),
     ],
 
     7: [
-        ("KiKiSa(NGười chơi)", "Nhập nội dung thoại màn 7 vào đây."),
-        ("SaSaKi(Tinh Linh)", "Nhập nội dung thoại màn 7 dòng 2 vào đây."),
     ],
 
     8: [
-        ("KiKiSa(NGười chơi)", "Nhập nội dung thoại màn 8 vào đây."),
-        ("SaSaKi(Tinh Linh)", "Nhập nội dung thoại màn 8 dòng 2 vào đây."), 
     ],
 
     9: [
-        ("KiKiSa(NGười chơi)", "Nhập nội dung thoại màn 9 vào đây."),
-        ("SaSaKi(Tinh Linh)", "Nhập nội dung thoại màn 9 dòng 2 vào đây."), 
+        ("SaSaKi(Tinh Linh)", "Bị rơi vào nơi nào rồi đay, tối thui!."), 
     ],
 
     10: [
-        ("KiKiSa(NGười chơi)", "Nhập nội dung thoại màn 10 (boss cuối) vào đây."),
-        ("SaSaKi(Tinh Linh)", "Nhập nội dung thoại màn 10 dòng 2 vào đây."),
     ],
 
 }
 
-# ── Loại 2: Thông báo khi nhặt vật phẩm ─────────────────
 THONG_BAO_VAT = {
 
-    # Khi nhặt Kiếm
     "kiem": (
         "Nhặt được Kiếm!",
-        "Bạn có thể nhấn F để tấn công.",
+        "Bạn có thể nhấn F để tấn công. Spam F liên tục có thể giúp bạn ở trên không.",
     ),
 
-    # Khi nhặt Sách (mở khoá Dash)
     "sach": (
         "Nhặt được Sách!",
-        "Bạn có thể nhấn E để sử dụng kỹ năng lướt tới 1 đoạn ngắn.",
+        "Bạn có thể nhấn E để sử dụng kỹ năng lướt tới 1 đoạn ngắn. E có thể giúp bạn bất tử trong 1 khoảng thời gian ngắn.",
     ),
 }

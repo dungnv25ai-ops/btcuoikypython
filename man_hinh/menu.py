@@ -1,25 +1,15 @@
-# ============================================================
-#  man_hinh/menu.py — Menu chính
-#  Nền: tai_nguyen/hinh_anh/menu.png
-#  4 bảng gỗ bên phải — text đè lên
-# ============================================================
-
+                                                              
 import pygame, os
 from cai_dat import *
 
-# ── Vị trí 4 bảng gỗ (tỉ lệ so với kích thước màn hình) ──
-# Đo lại từ ảnh thực tế 1512×756:
-#   bảng 1: y≈7%,  bảng 2: y≈28%, bảng 3: y≈49%, bảng 4: y≈70%
-#   x bắt đầu ≈53%, rộng ≈44%,  cao mỗi bảng ≈17%
 _BANG_GO = [
-    (0.560, 0.120, 0.380, 0.160),  # Bảng 1
-    (0.560, 0.320, 0.380, 0.160),  # Bảng 2
-    (0.560, 0.520, 0.380, 0.160),  # Bảng 3
-    (0.560, 0.720, 0.380, 0.160),  # Bảng 4
+    (0.560, 0.120, 0.380, 0.160),          
+    (0.560, 0.320, 0.380, 0.160),          
+    (0.560, 0.520, 0.380, 0.160),          
+    (0.560, 0.720, 0.380, 0.160),          
 ]
 
 _CACHE_NEN = {}
-
 
 def _load_nen(man_hinh):
     w, h = man_hinh.get_size()
@@ -38,13 +28,12 @@ def _load_nen(man_hinh):
     _CACHE_NEN[(w, h)] = surf
     return surf
 
-
 class Menu:
     def __init__(self, man_hinh):
         self.man_hinh      = man_hinh
         self.muc_dang_chon = 0
         self.cac_rect_nut  = []
-        self._dem          = 0   # đếm frame cho animation
+        self._dem          = 0                            
 
         self.cac_muc = [
             ("Chọn màn",           TRANG_THAI_CHON_MAN),
@@ -68,7 +57,6 @@ class Menu:
         w, h = self.man_hinh.get_size()
         self.cac_rect_nut = []
 
-        # ── Nền ─────────────────────────────────────────
         nen = _load_nen(self.man_hinh)
         if nen:
             self.man_hinh.blit(nen, (0, 0))
@@ -93,16 +81,13 @@ class Menu:
 
             active = chon or hover
 
-            # ── Highlight bên trong bảng khi hover/chọn ──
-            # ── Highlight khi hover/chọn (Chỉ đổi màu chữ) ──
             if active:
-                mau_chu  = (255, 235, 150)  # Vàng sáng nổi bật khi trỏ chuột
-                mau_bong = (100, 50, 10)    # Bóng tối đậm để chữ pop-up lên
+                mau_chu  = (255, 235, 150)                                   
+                mau_bong = (100, 50, 10)                                    
             else:
-                mau_chu  = (80, 45, 20)     # Nâu gỗ tối chìm vào bảng
-                mau_bong = (220, 190, 150)  # Bóng sáng mờ giả hiệu ứng khắc gỗ
+                mau_chu  = (80, 45, 20)                               
+                mau_bong = (220, 190, 150)                                     
 
-            # ── Text canh giữa bảng ───────────────────────
             cx = bx + bw // 2
             cy = by + bh // 2
             bong = self.font_muc.render(nhan, True, mau_bong)

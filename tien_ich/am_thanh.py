@@ -1,18 +1,12 @@
-# ============================================================
-#  tien_ich/am_thanh.py — Quản lý nhạc nền + sfx
-# ============================================================
-
+                                                              
 import os
 import pygame
 
-# ── Đường dẫn thư mục âm thanh ───────────────────────────
 _THU_MUC = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)),   # my_game/
+    os.path.dirname(os.path.dirname(__file__)),             
     "tai_nguyen", "am_thanh"
 )
 
-# ── Mapping key → tên file (không kèm đuôi) ─────────────
-# Đã xóa 1 key man_1_4 bị lặp và đảm bảo mọi file trỏ đúng tên
 _NHAC_NEN = {
     "menu"       : "nen",
     "man_1_4"    : "nhac",
@@ -22,24 +16,20 @@ _NHAC_NEN = {
     "boss_10_p2" : "nhac",
 }
 
-# Đã bỏ đuôi .mov đi vì Pygame không hỗ trợ. Nó sẽ tự lấy file .mp3
 _DUOI_UU_TIEN = [".mp3", ".ogg", ".wav"]
 
-
 def _tim_file(ten_goc):
-    """Tìm file âm thanh theo tên gốc, thử các đuôi ưu tiên."""
+
     for duoi in _DUOI_UU_TIEN:
         path = os.path.join(_THU_MUC, ten_goc + duoi)
         if os.path.isfile(path):
             return path
     return None
 
-
 class AmThanh:
-    """Quản lý toàn bộ âm thanh game — tạo 1 instance duy nhất."""
 
     def __init__(self, am_luong_nhac=0.7, am_luong_sfx=1.0):
-        # Đảm bảo mixer đã init
+                               
         if not pygame.mixer.get_init():
             pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
 
@@ -49,9 +39,8 @@ class AmThanh:
         self._am_luong_nhac = am_luong_nhac
         self._am_luong_sfx  = am_luong_sfx
         self._sfx_click     = self._tai_sfx("click")
-        self._tat           = False  # True = tắt hết âm thanh
+        self._tat           = False                           
 
-    # ── Nội bộ ───────────────────────────────────────────
     def _tai_sfx(self, ten):
         path = _tim_file(ten)
         if path:
@@ -61,16 +50,12 @@ class AmThanh:
                 pass
         return None
 
-    # ── API công khai ─────────────────────────────────────
     def dat_toc_do(self, toc_do: float):
-        """Thay đổi tốc độ phát nhạc (1.0=bình thường, 1.5=nhanh hơn).
-        Dùng pygame.mixer frequency scaling — chỉ hoạt động với pygame-ce hoặc
-        cách load lại file với tần số khác."""
+
         try:
-            # pygame-ce hỗ trợ set_pos + thay đổi frequency
-            # Cách đơn giản nhất: reload file với frequency nhân toc_do
+                                                           
             freq_goc, size, channels = pygame.mixer.get_init()
-            freq_moi = int(freq_goc / toc_do)   # tăng freq → nhanh hơn
+            freq_moi = int(freq_goc / toc_do)                          
             if not hasattr(self, '_nhac_path') or not self._nhac_path:
                 return
             vi_tri = pygame.mixer.music.get_pos() / 1000.0
@@ -84,7 +69,7 @@ class AmThanh:
             pass
 
     def choi_nhac(self, key: str):
-        """Phát nhạc nền theo key. Không làm gì nếu đang phát cùng key."""
+
         if self._tat:
             return
         if key == self._nhac_hien_tai:
@@ -101,7 +86,7 @@ class AmThanh:
             return
 
         try:
-            # Reset về tần số gốc khi đổi bài
+                                             
             if hasattr(self, '_toc_do_hien') and self._toc_do_hien != 1.0:
                 freq_goc = 44100
                 pygame.mixer.quit()
@@ -116,7 +101,7 @@ class AmThanh:
             self._nhac_hien_tai = None
 
     def phat_click(self):
-        """Phát sfx click menu."""
+
         if self._tat or self._sfx_click is None:
             return
         try:
@@ -126,7 +111,7 @@ class AmThanh:
             pass
 
     def dung(self):
-        """Dừng nhạc nền."""
+
         try:
             pygame.mixer.music.stop()
         except Exception:
@@ -134,14 +119,14 @@ class AmThanh:
         self._nhac_hien_tai = None
 
     def tam_dung(self):
-        """Tạm dừng (pause menu)."""
+
         try:
             pygame.mixer.music.pause()
         except Exception:
             pass
 
     def tiep_tuc(self):
-        """Tiếp tục sau khi tạm dừng."""
+
         if self._tat:
             return
         try:
@@ -150,7 +135,7 @@ class AmThanh:
             pass
 
     def tang_am(self, muc: float):
-        """Chỉnh âm lượng nhạc nền (0.0 – 1.0)."""
+
         self._am_luong_nhac = max(0.0, min(1.0, muc))
         try:
             pygame.mixer.music.set_volume(self._am_luong_nhac)
@@ -158,11 +143,11 @@ class AmThanh:
             pass
 
     def tang_am_sfx(self, muc: float):
-        """Chỉnh âm lượng sfx (0.0 – 1.0)."""
+
         self._am_luong_sfx = max(0.0, min(1.0, muc))
 
     def tat_am(self, tat: bool):
-        """True = tắt hết âm thanh."""
+
         self._tat = tat
         if tat:
             self.dung()

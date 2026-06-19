@@ -1,11 +1,8 @@
-# the_gioi/vat_the/moi_truong.py — Vật thể môi trường: Gai, Nước, Cổng teleport
+                                                                               
 import pygame
 import math
 from cai_dat import *
 
-# ══════════════════════════════════════════════════════════
-#  GAI — đứng im, chạm = mất mạng
-# ══════════════════════════════════════════════════════════
 _CACHE_GAI = None
 
 def _ve_gai():
@@ -28,7 +25,6 @@ def _ve_gai():
     _CACHE_GAI = s
     return s.copy()
 
-
 class Gai(pygame.sprite.Sprite):
     def __init__(self, cot, hang):
         super().__init__()
@@ -38,10 +34,6 @@ class Gai(pygame.sprite.Sprite):
     def kiem_tra_cham_nguoi(self, player_rect):
         return self.rect.colliderect(player_rect)
 
-
-# ══════════════════════════════════════════════════════════
-#  KHỐI NƯỚC — animation 151 frame, giảm tốc player
-# ══════════════════════════════════════════════════════════
 _CACHE_NUOC = []
 
 def _ve_nuoc(dem=0):
@@ -69,7 +61,6 @@ def _ve_nuoc(dem=0):
                 _CACHE_NUOC.append(s)
     return _CACHE_NUOC[(dem // 2) % len(_CACHE_NUOC)]
 
-
 class KhoiNuoc(pygame.sprite.Sprite):
     def __init__(self, cot, hang):
         super().__init__()
@@ -81,33 +72,24 @@ class KhoiNuoc(pygame.sprite.Sprite):
         self._dem += 1
         self.image = _ve_nuoc(self._dem)
 
-
-# ══════════════════════════════════════════════════════════
-#  KHỐI DỊCH CHUYỂN — cổng teleport 2x2
-# ══════════════════════════════════════════════════════════
-# ============================================================
-#  KHỐI DỊCH CHUYỂN — cổng teleport 2x2 (Ảnh cố định, không lơ lửng)
-# ============================================================
 class KhoiDichChuyen(pygame.sprite.Sprite):
     def __init__(self, cot, hang, dich_den_cot=42, dich_den_hang=5, rong=2, cao=2):
         super().__init__()
         self._W = TILE_SIZE*rong; self._H = TILE_SIZE*cao
         
-        # --- TẢI ẢNH cong.png ---
         try:
             self._surf_orig = pygame.image.load("tai_nguyen/khoi/cong.png").convert_alpha()
             self._surf_orig = pygame.transform.scale(self._surf_orig, (self._W, self._H))
         except Exception:
-            # Fallback nếu mất ảnh
+                                  
             self._surf_orig = pygame.Surface((self._W, self._H), pygame.SRCALPHA)
             pygame.draw.rect(self._surf_orig, (100,30,180), (0,0,self._W,self._H), border_radius=8)
             pygame.draw.rect(self._surf_orig, (140,70,220), (2,2,self._W-4,self._H-4), border_radius=7)
             cx, cy = self._W//2, self._H//2
             pygame.draw.circle(self._surf_orig, (180,120,255), (cx, cy), min(self._W,self._H)//2-10)
 
-        # Đặt hình ảnh và tạo khung Rect cố định
         self.image = self._surf_orig.copy()
-        # Đặt cổng tại đúng tọa độ (cot, hang) trên bản đồ
+                                                          
         self.rect  = self.image.get_rect(topleft=(cot*TILE_SIZE, hang*TILE_SIZE))
         
         self.dem             = 0
@@ -125,8 +107,7 @@ class KhoiDichChuyen(pygame.sprite.Sprite):
             self.font = pygame.font.SysFont(FONT_CHINH, 16)
 
     def update(self):
-        # ĐÃ XÓA: Không còn lơ lửng, không còn nhấp nháy alpha
-        # Khối sẽ nằm yên hoàn toàn một chỗ.
+                                                              
         self.dem += 1
 
     def xu_ly_vung(self, player_rect):

@@ -1,17 +1,14 @@
-# the_gioi/vat_the/ke_di_chuyen.py — Kẻ địch di chuyển + đạn
+                                                            
 import pygame
 import math
 import os as _os
 from cai_dat import *
 
-# ── Gốc thư mục tài nguyên ───────────────────────────────
 _THU_MUC_GD = _os.path.dirname(
     _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
-# ── Cache: {loai_quai: (surf_goc, surf_flip)} ────────────
 _CACHE_ANH = {}
 
-# ── Cache animation cầu lửa tụ lực (1-60.png) ───────────
 _CACHE_CAU_LUA_ANIM = []
 
 def _load_cau_lua_anim():
@@ -31,15 +28,13 @@ def _load_cau_lua_anim():
             pass
     return _CACHE_CAU_LUA_ANIM
 
-
 def _loai_quai_tu_man(so_man):
     if 1 <= so_man <= 4:
         return 'quai1'
     return 'quai2'
 
-
 def _load_anh(loai_quai):
-    """Load 1 ảnh PNG, trả về (surf_goc, surf_flip). Cache lại."""
+
     if loai_quai in _CACHE_ANH:
         return _CACHE_ANH[loai_quai]
 
@@ -55,7 +50,6 @@ def _load_anh(loai_quai):
         except Exception:
             pass
 
-    # Fallback
     s = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
     pygame.draw.rect(s, (160, 50, 180), (0, 0, TILE_SIZE, TILE_SIZE), border_radius=6)
     pygame.draw.rect(s, (120, 30, 140), (0, 0, TILE_SIZE, TILE_SIZE), 2, border_radius=6)
@@ -63,10 +57,6 @@ def _load_anh(loai_quai):
     _CACHE_ANH[loai_quai] = result
     return result
 
-
-# ══════════════════════════════════════════════════════════
-#  KHỐI ĐẠN
-# ══════════════════════════════════════════════════════════
 class _KhoiDan(pygame.sprite.Sprite):
     TOC_DO = 6
 
@@ -105,24 +95,18 @@ class _KhoiDan(pygame.sprite.Sprite):
         if not self._alive: return False
         return self.rect.colliderect(player_rect)
 
-
-# ══════════════════════════════════════════════════════════
-#  KẺ DI CHUYỂN
-# ══════════════════════════════════════════════════════════
 class KeDiChuyen(pygame.sprite.Sprite):
     TOC_DO       = 1.5
     NHAY_BIEN_DO = 0.5
     NHAY_TOC_DO  = 0.05
-    PHAM_VI_DAY  = TILE_SIZE * 1
     PHAM_VI_DIET = TILE_SIZE * 2
-    LUC_DAY      = 12
     I_FRAMES     = 40
     TAM_DANH     = 10 * TILE_SIZE
-    TU_LUC_TIME  = 1 * 60   # 1 giây tụ lực
-    HOI_CHIEU    = 1 * 60   # 1 giây hồi chiêu sau khi bắn
+    TU_LUC_TIME  = 1 * 60                  
+    HOI_CHIEU    = 1 * 60                                 
 
     def __init__(self, cot, hang, bien_gioi_trai, bien_gioi_phai,
-                 co_tan_cong=False, so_man=1):
+                 co_tan_cong=True, so_man=1):
         super().__init__()
         self._loai_quai  = _loai_quai_tu_man(so_man)
         self._surf_goc, self._surf_flip = _load_anh(self._loai_quai)
@@ -138,10 +122,10 @@ class KeDiChuyen(pygame.sprite.Sprite):
         self._bien_mat   = False
         self._alpha      = 255
         self.mau         = 1
-        self.co_tan_cong = co_tan_cong
-        self._sk_phase   = 0   # 0=chờ/hồi chiêu, 1=tụ lực, 2=đạn đang bay
+        self.co_tan_cong = co_tan_cong                                       
+        self._sk_phase   = 0
         self._tu_luc_dem = 0
-        self._hoi_chieu  = 0   # đếm hồi chiêu sau khi bắn
+        self._hoi_chieu  = 0
         self._huong_tc   = 1
         self._dan        = None
 
@@ -155,18 +139,7 @@ class KeDiChuyen(pygame.sprite.Sprite):
 
     def gan_nguoi_choi(self, player_rect):
         if self._sk_phase == 1: return False
-        return self.rect.inflate(self.PHAM_VI_DIET*2, self.PHAM_VI_DIET*2)\
-                   .colliderect(player_rect)
-
-    def kiem_tra_tan_cong(self, player_rect, i_frames):
-        if self._bien_mat or i_frames > 0 or self._sk_phase == 1:
-            return False, 0, 0
-        if self.rect.colliderect(player_rect):
-            dx   = player_rect.centerx - self.rect.centerx
-            dy   = player_rect.centery - self.rect.centery
-            dist = max(1, (dx**2 + dy**2)**0.5)
-            return True, int(dx/dist * self.LUC_DAY), int(dy/dist * self.LUC_DAY - 4)
-        return False, 0, 0
+        return self.rect.inflate(self.TAM_DANH * 2, self.TAM_DANH * 2).colliderect(player_rect)
 
     def bat_dau_bien_mat(self): self._bien_mat = True
 
@@ -180,7 +153,6 @@ class KeDiChuyen(pygame.sprite.Sprite):
     def update(self, ds_nen_tang, player_rect=None):
         self.dem += 1
 
-        # ── Đang biến mất ────────────────────────────────
         if self._bien_mat:
             self._alpha = max(0, self._alpha - 20)
             surf = self._lay_anh(self._flip_can()).copy()
@@ -190,7 +162,6 @@ class KeDiChuyen(pygame.sprite.Sprite):
                 self.kill()
             return
 
-        # ── Update đạn — lọc KhoiTanHinh để đạn không chạm khối tàng hình ──
         if self._dan is not None:
             from the_gioi.nen_tang import KhoiTanHinh
             ds_dac = [n for n in ds_nen_tang if not isinstance(n, KhoiTanHinh)]
@@ -199,20 +170,21 @@ class KeDiChuyen(pygame.sprite.Sprite):
                      else not self._dan.alive()
             if da_tat:
                 self._dan = None
-                # Đạn tắt → bắt đầu đếm hồi chiêu 1 giây
                 if self._sk_phase == 2:
                     self._sk_phase  = 0
                     self._hoi_chieu = self.HOI_CHIEU
+        else:
+                                                                                                    
+            if self._sk_phase == 2:
+                self._sk_phase  = 0
+                self._hoi_chieu = self.HOI_CHIEU
 
-        # ── Đếm hồi chiêu ────────────────────────────────
         if self._hoi_chieu > 0:
             self._hoi_chieu -= 1
 
-        # ── Skill tấn công ───────────────────────────────
         dang_tan_cong = False
         if self.co_tan_cong and player_rect is not None:
 
-            # Phase 0: chờ hồi chiêu xong rồi mới tụ lực
             if self._sk_phase == 0 and self._hoi_chieu <= 0:
                 dx = player_rect.centerx - self.rect.centerx
                 dy = player_rect.centery - self.rect.centery
@@ -221,14 +193,11 @@ class KeDiChuyen(pygame.sprite.Sprite):
                     self._tu_luc_dem = 0
                     self._huong_tc   = 1 if dx >= 0 else -1
 
-            # Phase 1: tụ lực 1 giây — đứng yên, xoay theo player
             elif self._sk_phase == 1:
                 dang_tan_cong    = True
                 self._tu_luc_dem += 1
-                # Luôn cập nhật hướng nhìn theo player trong lúc tụ lực
                 self._huong_tc = 1 if player_rect.centerx >= self.rect.centerx else -1
 
-                # Animation cầu lửa
                 frames = _load_cau_lua_anim()
                 if frames:
                     tl  = min(1.0, self._tu_luc_dem / self.TU_LUC_TIME)
@@ -251,7 +220,6 @@ class KeDiChuyen(pygame.sprite.Sprite):
                     surf.set_alpha(a)
                     self.image = surf
 
-                # Tụ lực xong → bắn
                 if self._tu_luc_dem >= self.TU_LUC_TIME:
                     from the_gioi.vat_the.dan import QuaCau
                     bx = self.rect.centerx
@@ -260,18 +228,14 @@ class KeDiChuyen(pygame.sprite.Sprite):
                     py = player_rect.centery
                     self._dan        = QuaCau(bx, by, px, py)
                     self._sk_phase   = 2
-                    self._tu_luc_dem = 0   # reset để lần sau tụ lực lại từ đầu
+                    self._tu_luc_dem = 0
                     self.vel_x       = self.TOC_DO * self._huong_tc
                     self.image       = self._lay_anh(self._huong_tc < 0)
                     self.rect        = self.image.get_rect(
                         midbottom=(int(self._x) + TILE_SIZE // 2,
                                    int(self._y_goc) + TILE_SIZE))
-                return  # không di chuyển khi tụ lực
+                return                              
 
-            # Phase 2: đạn đang bay — tiếp tục di chuyển bình thường
-            # (phase về 0 khi đạn tắt, xử lý ở phần update đạn bên trên)
-
-        # ── Di chuyển ngang ───────────────────────────────
         if not dang_tan_cong:
             self._x += self.vel_x
             self.rect.x = int(self._x)

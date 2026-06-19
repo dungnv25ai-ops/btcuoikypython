@@ -1,14 +1,12 @@
-# the_gioi/vat_the/kiem.py — Kiếm vật phẩm + Sách mở Dash
+                                                         
 import pygame
 import math
 import os as _os
 from cai_dat import *
 
-# ── Gốc thư mục ──────────────────────────────────────────
 _THU_MUC_GD = _os.path.dirname(
     _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
-# ── Load ảnh sách dùng chung ─────────────────────────────
 _CACHE_SACH = None
 
 def _load_anh_sach():
@@ -24,7 +22,7 @@ def _load_anh_sach():
             return _CACHE_SACH
         except Exception:
             pass
-    # Fallback vẽ tay
+                     
     s = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
     pygame.draw.rect(s, (30, 100, 200),  (2, 2, TILE_SIZE-4, TILE_SIZE-4), border_radius=5)
     pygame.draw.rect(s, (60, 140, 240),  (4, 4, TILE_SIZE-8, TILE_SIZE-8), border_radius=4)
@@ -36,12 +34,10 @@ def _load_anh_sach():
     _CACHE_SACH = s
     return _CACHE_SACH
 
-
-# ── Load ảnh kiếm ─────────────────────────────────────────
-_CACHE_KIEM_PNG = {}   # {(ngang, flip): Surface}
+_CACHE_KIEM_PNG = {}                             
 
 def _load_anh_kiem(ngang=False):
-    """Load kiem.png, scale 1×2 tile dọc hoặc xoay 90° nếu ngang."""
+
     key = ngang
     if key in _CACHE_KIEM_PNG:
         return _CACHE_KIEM_PNG[key]
@@ -51,23 +47,20 @@ def _load_anh_kiem(ngang=False):
         try:
             img = pygame.image.load(path).convert_alpha()
             if ngang:
-                # Xoay 90° ngược kim đồng hồ: chuôi sang trái, lưỡi sang phải
+                                                                             
                 img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE * 2))
                 img = pygame.transform.rotate(img, 90)
                 img = pygame.transform.scale(img, (TILE_SIZE * 2, TILE_SIZE))
             else:
-                # Dọc: chuôi trên, lưỡi dưới — đúng như ảnh gốc
+                                                               
                 img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE * 2))
             _CACHE_KIEM_PNG[key] = img
             return img
         except Exception:
             pass
 
-    # Fallback vẽ tay
     return _ve_kiem(ngang)
 
-
-# ── Vẽ kiếm fallback ──────────────────────────────────────
 def _ve_kiem(ngang=False):
     W, H = (TILE_SIZE*2, TILE_SIZE) if ngang else (TILE_SIZE, TILE_SIZE*2)
     s = pygame.Surface((W, H), pygame.SRCALPHA)
@@ -75,10 +68,8 @@ def _ve_kiem(ngang=False):
     pygame.draw.rect(s, (150, 120, 10), (0, 0, W, H), 2, border_radius=4)
     return s
 
-
 class Kiem(pygame.sprite.Sprite):
-    """Kiếm 1×2 tile — nhấn F khi gần để nhặt.
-    Dùng ảnh tai_nguyen/hinh_anh/nhan_vat/kiem.png."""
+
     PHAM_VI = TILE_SIZE * 2
 
     def __init__(self, cot, hang, ngang=False):
@@ -90,7 +81,7 @@ class Kiem(pygame.sprite.Sprite):
         self._alpha      = 255
         self._bien_mat   = False
         self._alpha_giam = 0
-        self._surf_goc   = self.image.copy()   # giữ bản gốc để set_alpha đúng
+        self._surf_goc   = self.image.copy()                                  
 
     def gan_nguoi_choi(self, player_rect):
         return self.rect.inflate(self.PHAM_VI*2, self.PHAM_VI*2).colliderect(player_rect)
@@ -113,7 +104,7 @@ class Kiem(pygame.sprite.Sprite):
                 self.kill()
 
     def ve_hint(self, screen, cam_x, cam_y, font):
-        t  = font.render("[F] Nhat kiem", True, VANG)
+        t  = font.render("[F] Nhặt kiếm", True, VANG)
         x  = self.rect.centerx - cam_x - t.get_width()//2
         y  = self.rect.top - cam_y - 22
         bg = pygame.Surface((t.get_width()+8, t.get_height()+4), pygame.SRCALPHA)
@@ -121,13 +112,8 @@ class Kiem(pygame.sprite.Sprite):
         screen.blit(bg, (x-4, y-2))
         screen.blit(t, (x, y))
 
-
-# ══════════════════════════════════════════════════════════
-#  SÁCH VẬT PHẨM — nhặt mở Dash
-# ══════════════════════════════════════════════════════════
 class Sach1x1(pygame.sprite.Sprite):
-    """Sách 1x1 — nhặt bằng F, mở khóa Dash.
-    Dùng ảnh tai_nguyen/hinh_anh/nhan_vat/sach.png."""
+
     PHAM_VI = TILE_SIZE * 2
 
     def __init__(self, cot, hang):
@@ -159,7 +145,7 @@ class Sach1x1(pygame.sprite.Sprite):
                 self.kill()
 
     def ve_hint(self, screen, cam_x, cam_y, font):
-        t  = font.render("[F] Nhan sach: mo khoa Dash", True, (100, 200, 255))
+        t  = font.render("[F] Nhặt sách", True, (100, 200, 255))
         x  = self.rect.centerx - cam_x - t.get_width()//2
         y  = self.rect.top - cam_y - 22
         bg = pygame.Surface((t.get_width()+8, t.get_height()+4), pygame.SRCALPHA)
@@ -167,10 +153,6 @@ class Sach1x1(pygame.sprite.Sprite):
         screen.blit(bg, (x-4, y-2))
         screen.blit(t, (x, y))
 
-
-# ══════════════════════════════════════════════════════════
-#  KIẾM CẦM TAY — hiển thị kiếm trên tay phải nhân vật
-# ══════════════════════════════════════════════════════════
 _CACHE_KIEM_CAM_TAY  = None
 _CACHE_KIEM_CAM_FLIP = None
 
@@ -184,7 +166,6 @@ def _lay_anh_kiem_cam():
             img = pygame.image.load(path).convert_alpha()
             img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE ))
             
-            # --- THÊM DÒNG NÀY ĐỂ XOAY KIẾM NGHIÊNG 45 ĐỘ ---
             img = pygame.transform.rotate(img, +135)
             _CACHE_KIEM_CAM_TAY  = img
             _CACHE_KIEM_CAM_FLIP = pygame.transform.flip(img, True, False)
@@ -199,9 +180,7 @@ def _lay_anh_kiem_cam():
     _CACHE_KIEM_CAM_FLIP = f
     return s, f
 
-
 class KiemCamTay:
-    """Vẽ kiếm trên tay phải nhân vật. Ẩn khi di chuyển/leo/đánh."""
 
     def ve(self, screen, cam_x, cam_y, nhan_vat, hieu_ung=None):
         if not nhan_vat.co_danh:
@@ -220,14 +199,13 @@ class KiemCamTay:
         
         if nhan_vat.huong == 1:
             anh = anh_goc
-            # Hướng phải: Canh x lùi vào trong mép phải một chút để khớp tay
+                                                                            
             x = pr.right - (TILE_SIZE // 1.5) - cam_x
         else:
             anh = anh_flip
-            # Hướng trái: Canh x vừa qua mép trái
+                                                 
             x = pr.left - (TILE_SIZE // 4) - cam_x -20
 
-        # Đẩy Y xuống thấp hơn một chút để ngang tầm tay (thay vì ngang đầu)
         y = pr.centery - (TILE_SIZE // 3) - cam_y - 30
         
         screen.blit(anh, (x, y))

@@ -1,9 +1,9 @@
-# tien_ich/nut_back.py — Hàm tiện ích vẽ nút ◀ Quay lại
+                                                       
 import pygame
 from cai_dat import *
 
 def ve_nut_back(screen, font):
-    """Vẽ nút ◀ Quay lại góc trên trái, trả về rect."""
+
     p = 10; NW = 110; NH = 34
     r = pygame.Rect(p, p, NW, NH)
     mx, my = pygame.mouse.get_pos()
@@ -15,14 +15,11 @@ def ve_nut_back(screen, font):
     screen.blit(t, t.get_rect(center=r.center))
     return r
 
-
-# ── Nền chung cho các màn trước khi chơi ─────────────────
 import os as _os
 _CACHE_NEN_CHUNG = {}
 
 def ve_nen_chung(screen):
-    """Vẽ ảnh tai_nguyen/hinh_anh/nen.png scale vừa màn hình,
-    phủ lớp tối mờ lên trên. Fallback fill tối nếu chưa có ảnh."""
+
     w, h = screen.get_size()
     key = (w, h)
     if key not in _CACHE_NEN_CHUNG:
@@ -41,7 +38,7 @@ def ve_nen_chung(screen):
     nen = _CACHE_NEN_CHUNG[key]
     if nen:
         screen.blit(nen, (0, 0))
-        # Lớp tối mờ nhẹ đè lên
+                               
         ov = pygame.Surface((w, h), pygame.SRCALPHA)
         ov.fill((0, 0, 0, 120))
         screen.blit(ov, (0, 0))

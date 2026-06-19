@@ -1,12 +1,4 @@
-# ============================================================
-#  man_hinh/tro_choi_khac.py
-#  Hoàn toàn độc lập với man_choi.py
-#
-#  Lớp 1 — chọn loại: Mê Cung | PvE
-#  Lớp 2 — chọn màn 1-10
-#  Lớp 3 — chơi game (ManChoiKhac tự xử lý)
-# ============================================================
-
+                                                              
 import pygame
 import math
 from cai_dat import *
@@ -23,24 +15,16 @@ from tien_ich.hoi_thoai   import HoiThoai, ThongBao
 
 T = TILE_SIZE
 
-# ── Trạng thái nội bộ ─────────────────────────────────────
 _LOP_CHON_LOAI = 'chon_loai'
 _LOP_CHON_MAN  = 'chon_man'
 _LOP_SAP_RA    = 'sap_ra'
 _LOP_CHOI      = 'choi'
 
-
-# ══════════════════════════════════════════════════════════
-#  ManChoiKhac — game loop riêng cho mê cung và pve
-# ══════════════════════════════════════════════════════════
 class ManChoiKhac:
-    """Màn chơi độc lập cho TroChoiKhac.
-    - Mê cung: zoom full map + bóng tối + tinh linh điều khiển
-    - PvE:     zoom full map (giống boss 5/10, chưa có boss riêng)
-    """
+
     def __init__(self, man_hinh):
         self.man_hinh   = man_hinh
-        self.loai       = None   # 'me_cung' | 'pve'
+        self.loai       = None                      
         self.so_man     = 1
         self.hud        = HUD()
         self.ket_qua    = ManKetQua()
@@ -57,7 +41,6 @@ class ManChoiKhac:
         self.fm = pygame.font.SysFont(FONT_CHINH, max(18, h//24), bold=True)
         self.fn = pygame.font.SysFont(FONT_CHINH, max(13, h//36))
 
-    # ── Load màn ──────────────────────────────────────────
     def tai_man(self, loai, so_man):
         self.loai    = loai
         self.so_man  = so_man
@@ -76,7 +59,7 @@ class ManChoiKhac:
             ban_do = lay_map_pve(self.so_man)
 
         if ban_do is None:
-            # Map chưa có — tạo map trống tối thiểu để không crash
+                                                                  
             ban_do = [
                 "####",
                 "#P *",
@@ -90,7 +73,7 @@ class ManChoiKhac:
         self.ds_nuoc = pygame.sprite.Group()
         self.ds_sao  = pygame.sprite.Group()
         self.ds_la   = pygame.sprite.Group()
-        self._man9_tl = None   # tinh linh điều khiển (mê cung)
+        self._man9_tl = None                                   
         sx = sy = 0
 
         KHOI_DUNG = ('#', 'C', '~', 'W')
@@ -105,7 +88,6 @@ class ManChoiKhac:
                 elif o == '*': self.ds_dich.add(ODict(ci, ri))
                 elif o == 'P': sx, sy = ci, ri
 
-        # Spawn TileLa phía trên tile C
         for ri, hang in enumerate(ban_do):
             for ci, o in enumerate(hang):
                 if o == 'C':
@@ -113,7 +95,6 @@ class ManChoiKhac:
                     if o_tren not in KHOI_DUNG:
                         self.ds_la.add(TileLa(ci, ri))
 
-        # Tinh linh (mê cung) hoặc dummy ngoài màn (pve)
         if self.loai == 'me_cung':
             self._man9_tl = TinhLinhDieuKhien(sx*T, sy*T)
         else:
@@ -128,7 +109,6 @@ class ManChoiKhac:
         self.camera.cap_nhat_boss(
             *self.man_hinh.get_size())
 
-    # ── Update ────────────────────────────────────────────
     def update(self):
         self._tao_font()
         if self.tam_dung or self.ket_qua.hien:
@@ -139,11 +119,9 @@ class ManChoiKhac:
         if self.hoi_thoai.dang_hien or self.thong_bao.dang_hien:
             return
 
-        # Update camera cố định
         w, h = self.man_hinh.get_size()
         self.camera.cap_nhat_boss(w, h)
 
-        # Update sprite
         self.ds_nuoc.update()
         self.ds_sao.update()
         self.ds_la.update()
@@ -151,20 +129,17 @@ class ManChoiKhac:
         if self._man9_tl:
             self._man9_tl.update(list(self.ds_nen))
 
-            # Nhặt sao
             for s in list(self.ds_sao):
                 if self._man9_tl.rect.colliderect(s.rect):
                     self.ds_sao.remove(s)
                     self.hud.nhat_sao()
 
-            # Tới đích
             for d in self.ds_dich:
                 if self._man9_tl.rect.colliderect(d.rect):
                     self.da_thang = True
                     self.ket_qua.hien_thang(self.so_man, self.hud.sao)
                     break
 
-            # Gai
             for g in self.ds_roi:
                 if g.kiem_tra_cham_nguoi(self._man9_tl.rect):
                     go = self.hud.mat_mang()
@@ -174,13 +149,11 @@ class ManChoiKhac:
                         self.ket_qua.hien_thua(self.so_man)
                     break
 
-    # ── Vẽ ────────────────────────────────────────────────
     def ve(self):
         w, h = self.man_hinh.get_size()
         cam   = self.camera
         ty_le = cam.ty_le
 
-        # Tạo canvas kích thước map
         map_w = int(cam.rong_the_gioi)
         map_h = int(cam.cao_the_gioi)
         canvas = pygame.Surface((map_w, map_h))
@@ -190,7 +163,6 @@ class ManChoiKhac:
         else:
             canvas.fill((35, 15, 15))
 
-        # Vẽ tile
         for s in [*self.ds_nen, *self.ds_dich, *self.ds_roi]:
             canvas.blit(s.image, s.rect)
         for n in self.ds_nuoc:
@@ -202,9 +174,9 @@ class ManChoiKhac:
 
         if self._man9_tl:
             if self.loai == 'me_cung':
-                # Vẽ tinh linh
+                              
                 self._man9_tl.ve(canvas, 0, 0)
-                # Bóng tối
+                          
                 tx  = int(self._man9_tl.rect.centerx)
                 ty9 = int(self._man9_tl.rect.centery)
                 R   = T + T//2
@@ -217,7 +189,6 @@ class ManChoiKhac:
                                        (tx, ty9), rv, 1)
                 canvas.blit(dark, (0, 0))
 
-        # Scale canvas → màn hình
         sw     = int(map_w * ty_le)
         sh     = int(map_h * ty_le)
         scaled = pygame.transform.scale(canvas, (sw, sh))
@@ -226,7 +197,6 @@ class ManChoiKhac:
         self.man_hinh.fill((0, 0, 0))
         self.man_hinh.blit(scaled, (max(0, ox), max(0, oy)))
 
-        # HUD + nút + overlay
         self.hud.ve_don_gian(self.man_hinh)
         self._ve_nut(w)
         self.ket_qua.ve(self.man_hinh)
@@ -246,13 +216,13 @@ class ManChoiKhac:
         pygame.draw.rect(self.man_hinh, TRANG, (cx-9, cy-10, 7, 20))
         pygame.draw.rect(self.man_hinh, TRANG, (cx+2,  cy-10, 7, 20))
 
-    MUC_P = [("Tiep tuc","tc"), ("Choi lai","cl"), ("Ve menu chon man","vm")]
+    MUC_P = [("Tiếp tục","tc"), ("Chơi lại","cl"), ("Về menu chọn màn","vm")]
 
     def _ve_pause(self, w, h):
         ov = pygame.Surface((w, h), pygame.SRCALPHA)
         ov.fill((0,0,0,160)); self.man_hinh.blit(ov, (0,0))
         ft = pygame.font.SysFont(FONT_CHINH, max(30,h//12), bold=True)
-        ti = ft.render("Tam Dung", True, VANG)
+        ti = ft.render("Tạm Dừng", True, VANG)
         self.man_hinh.blit(ti, ti.get_rect(center=(w//2, h//2-100)))
         self.r_mp = []
         nw = min(320, w-80); nr = max(40, h//14)
@@ -270,7 +240,6 @@ class ManChoiKhac:
                                  (25,25,25) if i==self._muc_pause else TRANG)
             self.man_hinh.blit(chu, chu.get_rect(center=r.center))
 
-    # ── Sự kiện ───────────────────────────────────────────
     def xu_ly_su_kien(self, ev):
         if self.ket_qua.hien:
             if ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1:
@@ -330,12 +299,6 @@ class ManChoiKhac:
         elif a == 'vm': self.tam_dung = False; return 've_chon_man'
         return None
 
-
-# ══════════════════════════════════════════════════════════
-#  Sao trên map (copy nhẹ từ man_choi)
-# ══════════════════════════════════════════════════════════
-#  TroChoiKhac — màn hình chính (menu chọn loại + chọn màn)
-# ══════════════════════════════════════════════════════════
 class TroChoiKhac:
     def __init__(self, man_hinh):
         self.man_hinh  = man_hinh
@@ -353,7 +316,6 @@ class TroChoiKhac:
         self.fm = pygame.font.SysFont(FONT_CHINH, max(18,h//22), bold=True)
         self.fn = pygame.font.SysFont(FONT_CHINH, max(13,h//36))
 
-    # ── Tự động tính màn nào có map ───────────────────────
     def _co_map(self, loai, so_man):
         if loai == 'me_cung':
             return lay_map_me_cung(so_man) is not None
@@ -364,7 +326,6 @@ class TroChoiKhac:
         if self._lop == _LOP_CHOI:
             self._game.update()
 
-    # ── Vẽ ────────────────────────────────────────────────
     def ve(self):
         if self._lop == _LOP_CHOI:
             self._game.ve(); return
@@ -386,8 +347,6 @@ class TroChoiKhac:
         tieu = self.ft.render("Trò Chơi Khác", True, VANG)
         ty   = h // 10
         self.man_hinh.blit(tieu, tieu.get_rect(center=(w//2, ty)))
-        pygame.draw.line(self.man_hinh, (60,60,120),
-                         (w//2-220, ty+28), (w//2+220, ty+28), 1)
 
         NW = int(w*0.32); NH = int(h*0.38)
         gap = int(w*0.06)
@@ -396,7 +355,7 @@ class TroChoiKhac:
         mx, my = pygame.mouse.get_pos()
 
         DATA = [
-            ('me_cung', 'Mê Cung',  'Góc nhìn tối  •  Tinh linh',  (40,40,120),(80,80,220)),
+            ('me cung', 'Mê Cung',  'Góc nhìn tối  •  Tinh linh',  (40,40,120),(80,80,220)),
             ('pve',     'PvE',       'Chiến đấu  •  Toàn map',       (80,20,20), (200,60,60)),
         ]
         for i, (key, ten, mo, mn, mv) in enumerate(DATA):
@@ -423,10 +382,7 @@ class TroChoiKhac:
         tieu = self.ft.render(f"Trò Chơi Khác  —  {ten_loai}", True, VANG)
         ty   = h // 12
         self.man_hinh.blit(tieu, tieu.get_rect(center=(w//2, ty)))
-        pygame.draw.line(self.man_hinh, (60,60,120),
-                         (w//2-260, ty+26), (w//2+260, ty+26), 1)
 
-        # Nút quay lại
         self._r_back = pygame.Rect(int(w*0.03), int(h*0.03), 90, 34)
         mx, my = pygame.mouse.get_pos()
         hv_b = self._r_back.collidepoint(mx, my)
@@ -435,8 +391,8 @@ class TroChoiKhac:
                          self._r_back, border_radius=8)
         pygame.draw.rect(self.man_hinh, (100,100,180), self._r_back, 1, border_radius=8)
         self.man_hinh.blit(
-            self.fn.render("◀  Quay lại", True, (180,180,230)),
-            self.fn.render("◀  Quay lại", True, (180,180,230)).get_rect(
+            self.fn.render("Quay lại", True, (180,180,230)),
+            self.fn.render("Quay lại", True, (180,180,230)).get_rect(
                 center=self._r_back.center))
 
         COT, HANG = 5, 2
@@ -475,8 +431,6 @@ class TroChoiKhac:
                 self.man_hinh.blit(t_k, t_k.get_rect(
                     center=(r.centerx, r.bottom-int(o_r*0.2))))
 
-
-
     def _ve_sap_ra(self, w, h):
         ov = pygame.Surface((w,h), pygame.SRCALPHA)
         ov.fill((0,0,0,170)); self.man_hinh.blit(ov, (0,0))
@@ -491,22 +445,19 @@ class TroChoiKhac:
         self.man_hinh.blit(t2, t2.get_rect(center=(w//2, by+90)))
         self.man_hinh.blit(t3, t3.get_rect(center=(w//2, by+130)))
 
-    # ── Sự kiện ───────────────────────────────────────────
     def xu_ly_su_kien(self, su_kien):
-        # Đang chơi — delegate sang ManChoiKhac
+                                               
         if self._lop == _LOP_CHOI:
             ket = self._game.xu_ly_su_kien(su_kien)
             if ket == 've_chon_man':
                 self._lop = _LOP_CHON_MAN
             return TRANG_THAI_TRO_CHOI_KHAC
 
-        # Thông báo sắp ra
         if self._lop == _LOP_SAP_RA:
             if su_kien.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN):
                 self._lop = _LOP_CHON_MAN
             return TRANG_THAI_TRO_CHOI_KHAC
 
-        # Chọn loại
         if self._lop == _LOP_CHON_LOAI:
             if su_kien.type == pygame.KEYDOWN and su_kien.key == pygame.K_ESCAPE:
                 return TRANG_THAI_MENU
@@ -520,7 +471,6 @@ class TroChoiKhac:
                         self._lop      = _LOP_CHON_MAN
             return TRANG_THAI_TRO_CHOI_KHAC
 
-        # Chọn màn
         if self._lop == _LOP_CHON_MAN:
             if su_kien.type == pygame.KEYDOWN:
                 if su_kien.key == pygame.K_ESCAPE:

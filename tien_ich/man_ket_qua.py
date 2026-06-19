@@ -1,7 +1,6 @@
-# tien_ich/man_ket_qua.py
+                         
 import pygame, math
 from cai_dat import *
-
 
 class ManKetQua:
     def __init__(self):
@@ -29,18 +28,16 @@ class ManKetQua:
     def an(self):
         self.hien = False
 
-    # ── Lấy danh sách nút theo trạng thái ─────────────────
     def _lay_labels(self):
         if self.thang:
             labs = [("Chơi lại","choi_lai")]
             if self.so_man < 10:
-                labs.append((f"Man {self.so_man+1}","man_tiep"))
+                labs.append((f"Màn {self.so_man+1}","man_tiep"))
             labs.append(("Trang chủ","man_chinh"))
         else:
             labs = [("Chơi lại","choi_lai"),("Trang chủ","man_chinh")]
         return labs
 
-    # ── Tính rect các nút (dùng chung cho vẽ và click) ────
     def _tinh_nut(self, w, h):
         BW = min(460,w-40); BH = min(300,h-60)
         bx = (w-BW)//2;     by = (h-BH)//2
@@ -53,7 +50,6 @@ class ManKetQua:
             rects[key] = pygame.Rect(nx0+i*(NW+GAP), ny, NW, NH)
         return bx,by,BW,BH, rects
 
-    # ── Vẽ ────────────────────────────────────────────────
     def ve(self, screen):
         if not self.hien: return
         w,h = screen.get_size()
@@ -69,9 +65,9 @@ class ManKetQua:
         pygame.draw.rect(screen,mau_v,(bx,by,BW,BH),3,border_radius=14)
 
         if self.thang:
-            t1 = self.ft.render("THANG ROI!",True,VANG)
+            t1 = self.ft.render("Đã qua màn!",True,VANG)
             screen.blit(t1,t1.get_rect(center=(bx+BW//2,by+38)))
-            # Sao
+                 
             R=18; sx0=bx+BW//2-3*(R*2+10)//2
             for i in range(3):
                 cx=sx0+i*(R*2+10)+R; cy=by+95
@@ -84,15 +80,14 @@ class ManKetQua:
                 pygame.draw.polygon(screen,mau,pts)
                 if i<self.so_sao:
                     pygame.draw.polygon(screen,(255,255,150),pts,2)
-            t2=self.fn.render(f"Da thu thap {self.so_sao}/3 ngoi sao",True,TRANG)
+            t2=self.fn.render(f"Đã thu thập {self.so_sao}/3 ngôi sao",True,TRANG)
             screen.blit(t2,t2.get_rect(center=(bx+BW//2,by+148)))
         else:
             t1=self.ft.render("GAME OVER",True,(220,60,60))
-            t2=self.fn.render("Ban da mat het mang!",True,(200,150,150))
+            t2=self.fn.render("Bạn đã chết!",True,(200,150,150))
             screen.blit(t1,t1.get_rect(center=(bx+BW//2,by+55)))
             screen.blit(t2,t2.get_rect(center=(bx+BW//2,by+108)))
 
-        # Nút
         mx,my = pygame.mouse.get_pos()
         labels = self._lay_labels()
         for nhan,key in labels:
@@ -106,9 +101,8 @@ class ManKetQua:
             t=self.fn.render(nhan,True,TRANG)
             screen.blit(t,t.get_rect(center=r.center))
 
-    # ── Xử lý click ───────────────────────────────────────
     def xu_ly_click(self, pos, w, h):
-        """Trả về 'choi_lai','man_tiep','man_chinh' hoặc None."""
+
         if not self.hien: return None
         _,_,_,_, rects = self._tinh_nut(w, h)
         for key,r in rects.items():

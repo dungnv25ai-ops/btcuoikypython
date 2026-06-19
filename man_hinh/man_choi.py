@@ -1,4 +1,4 @@
-# man_hinh/man_choi.py
+                      
 import pygame
 import math
 from cai_dat import *
@@ -23,13 +23,6 @@ from the_gioi.hieu_ung      import QuanLyHieuUng
 
 T = TILE_SIZE
 
-
-# ══════════════════════════════════════════════════════════
-#  Sao trên map
-# ══════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════
-#  MÀN CHƠI  (kế thừa 2 mixin boss)
-# ══════════════════════════════════════════════════════════
 class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
     def __init__(self, man_hinh):
         self.man_hinh = man_hinh; self.so_man = 1
@@ -47,7 +40,7 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         self._kiem_cam   = KiemCamTay()
         self.da_co_dash  = False
         self._giap_cd     = 0
-        self.GIAP_CD      = 5 * FPS   # 5 giây hồi chiêu Q
+        self.GIAP_CD      = 5 * FPS                       
         self._ds_cau          = pygame.sprite.Group()
         self._i_frames        = 0
         self.hieu_ung   = QuanLyHieuUng()
@@ -80,17 +73,22 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         self._boss_win  = False
         self._boss_timer = 0
         self._tai_ban_do()
-        # PHẢI set sau _tai_ban_do() vì NhanVat tạo lại ở đó
-        if self.so_man >= 3:
-            self.nhan_vat.co_danh = True
+                                                                                             
+        if len(self.ds_sach) > 0:
+            self.nhan_vat.co_dash = False
+        else:
+            self.nhan_vat.co_dash = (n >= 4)
+
+        if len(self.ds_kiem) > 0:
+            self.nhan_vat.co_danh = False
+        else:
+            self.nhan_vat.co_danh = (self.so_man >= 3)
+
         self.nhan_vat.co_bay = self.so_man >= 6
-        if n >= 4:   self.nhan_vat.co_dash = True;  self.da_co_dash = True
-        elif n == 3: self.nhan_vat.co_dash = self.da_co_dash
-        else:        self.nhan_vat.co_dash = False
         if n == 1: self.video.bat()
 
     def tai_man_khac(self, loai, so_man):
-        """Load màn từ TroChoiKhac — mapMC hoặc mapPE."""
+
         if loai == 'me_cung':
             ban_do = lay_map_me_cung(so_man)
             la_boss = False
@@ -99,9 +97,8 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
             la_boss = False
 
         if ban_do is None:
-            return False   # không có map
+            return False                 
 
-        # Dùng _tai_ban_do nhưng override map
         self._map_override = (ban_do, la_boss)
         self.so_man    = so_man
         self.da_thang  = False
@@ -116,8 +113,7 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         self._tl_dieu_khien     = None
         self._boss_win  = False
         self._boss_timer = 0
-        # Màn mê cung → giống màn 9 (tinh linh điều khiển, zoom full)
-        # Màn pve      → giống màn 5/10 (zoom boss)
+                                                                     
         self._tai_ban_do()
         return True
 
@@ -145,7 +141,7 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         self._ds_kiem_nem = pygame.sprite.Group()
         self._ds_kiem_bay = pygame.sprite.Group()
         self._ds_kiem_mua = pygame.sprite.Group()
-        self.ds_la        = pygame.sprite.Group()   # lá trang trí trên tile C
+        self.ds_la        = pygame.sprite.Group()                             
         self._i_frames    = 0
         self._boss_timer  = 0
         self._boss_win    = False
@@ -160,15 +156,15 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                 elif o == 'K': self.ds_kiem.add(Kiem(ci, ri, ngang=False))
                 elif o == 'S': self.ds_sach.add(Sach1x1(ci, ri))
                 elif o == '~': self.ds_nuoc.add(KhoiNuoc(ci, ri))
-                elif o == 'A' and ri == 5 and ci == 25: self.ds_dc.add(KhoiDichChuyen(ci, ri, 55, 5)) 
-                elif o == 'Z' and ri == 5 and ci == 55: self.ds_dc.add(KhoiDichChuyen(ci, ri, 25, 5)) 
-                elif o == 'B' and ri == 5 and ci == 89: self.ds_dc.add(KhoiDichChuyen(ci, ri, 128, 0)) 
-                elif o == 'D' and ri == 0 and ci == 128: self.ds_dc.add(KhoiDichChuyen(ci, ri, 89, 5))
+                elif o == 'A' and ri == 6 and ci == 25: self.ds_dc.add(KhoiDichChuyen(ci, ri, 55, 6)) 
+                elif o == 'Z' and ri == 6 and ci == 55: self.ds_dc.add(KhoiDichChuyen(ci, ri, 25, 6)) 
+                elif o == 'B' and ri == 6 and ci == 89: self.ds_dc.add(KhoiDichChuyen(ci, ri, 118, 1)) 
+                elif o == 'D' and ri == 1 and ci == 118: self.ds_dc.add(KhoiDichChuyen(ci, ri, 89, 6))
 
-                elif o == '5':   # spawn Boss5
+                elif o == '5':                
                     bx5, by5 = ci, ri
                     self.ds_boss.add(Boss5(bx5, by5))
-                elif o == '1':   # spawn Boss10
+                elif o == '1':                 
                     bx10, by10 = ci, ri
                     self.ds_boss.add(Boss10(bx10, by10))
                 elif o == 'E':
@@ -185,8 +181,7 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                 elif o == 'P': sx, sy = ci, ri
                 elif o == '*': self.ds_dich.add(ODict(ci, ri))
 
-        # ── Spawn lá trang trí: tile C mà hàng trên là khoảng trống ──
-        KHOI_DUNG = ('#', 'C', '~', 'W')   # ký hiệu không cho lá mọc xuyên
+        KHOI_DUNG = ('#', 'C', '~', 'W')                                   
         for ri, hang in enumerate(ban_do):
             for ci, o in enumerate(hang):
                 if o == 'C' and not self.la_boss:
@@ -194,9 +189,8 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                     if o_tren not in KHOI_DUNG:
                         self.ds_la.add(TileLa(ci, ri))
 
-        # Màn 9: không tạo nhân vật thật, chỉ dùng tinh linh điều khiển
         if self.so_man == 9:
-            # Tạo nhân vật giả ngoài màn để tránh crash các hàm cần nhan_vat
+                                                                            
             self.nhan_vat  = NhanVat(-9999, -9999)
             self.nhan_vat.khoa(True)
             self.spawn_pos = (-9999, -9999)
@@ -205,9 +199,6 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
             self.nhan_vat.so_kiem = 0
             self.spawn_pos = (sx*T, sy*T)
 
-        # Boss được spawn từ ký hiệu '5'/'1' trong map ở vòng for phía trên
-
-        # Vars skill boss (reset mỗi lần tải màn boss)
         if self.so_man in (5, 10):
             self._bsk_sk1_next   = 5 * FPS
             self._ds_tia_ban     = pygame.sprite.Group()
@@ -237,10 +228,10 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
             self._b10_bd_cd      = 0
             self._b10_bd_ne      = 0
             self._b10_bd_ne_dir  = 1
-            self._b10_enrage        = False   # True khi HP <=5 (phase2) — chỉ SK3/SK4
-            self._b10_tuyet_vong_cd = 0       # cooldown SK3 khi <=5HP (3 giây)
+            self._b10_enrage        = False                                           
+            self._b10_tuyet_vong_cd = 0                                        
             self._b10_dash_hit      = False
-            self._b10_f_hit         = False   # F đánh trúng boss frame này
+            self._b10_f_hit         = False                                
 
         rong = len(ban_do[0]) * T; cao = len(ban_do) * T
         self.camera = Camera(rong, cao)
@@ -255,15 +246,15 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
             self.tinh_linh.bat_dau(sx*T + T*2, sy*T)
             self.co_hoan_doi = True
         elif self.so_man == 5:
-            # Spawn sát bên phải nhân vật
+                                         
             self.tinh_linh.bat_dau(sx*T + T, sy*T)
         elif self.so_man == 10:
-            # Spawn sát bên phải nhân vật
+                                         
             self.tinh_linh.bat_dau(sx*T + T, sy*T)
 
         if self.so_man == 9:
             self._man9_tl = TinhLinhDieuKhien(sx*T, sy*T)
-            # Không khóa gì thêm — nhan_vat giả đã ở ngoài màn
+                                                              
         else:
             self._man9_tl = None
 
@@ -271,54 +262,28 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         self.nhan_vat.rect.topleft = self.spawn_pos
         self.nhan_vat.vel_y = self.nhan_vat.vel_x = 0
 
-    def _tinh_linh_noi(self, cau):
-        """Kích hoạt tinh linh nói một câu thoại ngắn nếu đang hiện."""
-        if self.tinh_linh.hien:
-            self.tinh_linh.cau_thoai = cau
-            self.tinh_linh.kich_hoat_thoai()
-
-    def _kiem_tra_cham_T(self):
-        """Kiểm tra nhân vật vừa bị chặn bởi khối T → tinh linh nói."""
-        if not self.tinh_linh.hien: return
-        for n in self.ds_nen:
-            if not isinstance(n, KhoiTanHinh): continue
-            if self.nhan_vat.rect.colliderect(n.rect):
-                if not self.tinh_linh.dang_noi:
-                    if self.so_man in (5, 10):
-                        self._tinh_linh_noi("Can than te!")
-                    else:
-                        self._tinh_linh_noi("Hinh nhu duong nay khong di duoc...")
-                return
-
     def _mat_mang(self):
-        """Trừ 1 máu khi bị đánh. Ở màn 5/10, Q tự động bảo vệ:
-        - Đang bất tử → không trừ máu.
-        - Q đã hồi (chưa active) → tự bật Q ngay (3s), KHÔNG trừ máu đòn này,
-          ĐẶT cooldown Q (_giap_cd = GIAP_CD = 5s).
-        - Q đang hồi (cooldown) và không bất tử → trừ máu thật; nếu còn sống
-          thì bật bất tử 3s để chống combo, KHÔNG ảnh hưởng cooldown Q.
-        Các màn khác: trừ máu bình thường, không có Q.
-        Trả về True nếu game over (hết máu)."""
+
+        if self.nhan_vat._dash_bat_tu_timer > 0:
+            return False
         if self.so_man in (5, 10):
             if self.hieu_ung.dang_bat_tu:
                 return False
 
             if self._giap_cd <= 0:
-                # Q đã hồi → tự động bật ngay, đỡ đòn này hoàn toàn
+                                                                   
                 self.hieu_ung.kich_hoat('bat_tu')
                 self._giap_cd = self.GIAP_CD
                 return False
 
         go = self.hud.mat_mang()
         if not go and self.so_man in (5, 10):
-            # Bất tử do mất máu (chống combo) — KHÔNG ảnh hưởng cooldown Q
+                                                                          
             self.hieu_ung.kich_hoat('bat_tu')
         return go
 
     def _so_sao_thang(self):
-        """Số sao hiển thị khi thắng màn.
-        Màn 5/10 (boss): tính theo số mạng còn lại (không nhặt sao trên map).
-        Các màn khác: theo số sao đã nhặt trên map."""
+
         if self.so_man in (5, 10):
             return self.hud.sao_theo_mang()
         return self.hud.sao
@@ -329,18 +294,12 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         if self.tinh_linh.hien:
             self.tinh_linh.x = float(dest_x + TILE_SIZE)
             self.tinh_linh.y = float(dest_y)
-            self.tinh_linh._dang_di_chuyen = False
-            self.tinh_linh.la_platform     = False
 
-    # ══════════════════════════════════════════════════════
-    #  UPDATE
-    # ══════════════════════════════════════════════════════
     def update(self):
         self._tao_font()
         if self.tam_dung: return
         if self.ket_qua.hien: return
 
-        # Thoại màn 1 sau video
         if (self.so_man == 1 and not self.video.hien
                 and not self.hoi_thoai.dang_hien
                 and not self.hoi_thoai._cac_dong
@@ -350,7 +309,6 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         self.hoi_thoai.update()
         self.thong_bao.update()
 
-        # Camera luôn cập nhật kể cả khi đang thoại — tránh nhân vật bị vẽ lệch
         if self.so_man in (5, 10) or self.so_man == 9:
             _w, _h = self.man_hinh.get_size()
             self.camera.cap_nhat_boss(_w, _h)
@@ -361,42 +319,34 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
             return
 
         self.nhan_vat.khoa(self.video.hien or self._dang_la_tinh_linh)
+                                           
+        self.nhan_vat._khoa_f_bay = self.hieu_ung.dang_bay
 
-        # Giáp bất tử — chỉ giữ cooldown
         if self._giap_cd > 0: self._giap_cd -= 1
 
-        # Tinh linh điều khiển
         if self._dang_la_tinh_linh and self._tl_dieu_khien:
             self._tl_dieu_khien.update(list(self.ds_nen) + list(self.ds_vat))
 
-        # Danh sách va chạm
         tat_ca = list(self.ds_nen) + list(self.ds_vat)
-        if self.tinh_linh.hien and self.tinh_linh.la_platform:
-            tl_rect = self.tinh_linh.rect
-            if tl_rect:
-                class _P:
-                    def __init__(self, r): self.rect = r
-                tat_ca.append(_P(tl_rect))
 
         co_thoai_mo = any(dc._cho_tra_loi for dc in self.ds_dc)
         chuot_giu = pygame.mouse.get_pressed()[0] and not self.video.hien and not co_thoai_mo
 
-        # Màn 9: chỉ tinh linh — bỏ qua toàn bộ logic nhân vật
         if self.so_man == 9:
             if self._man9_tl:
                 self._man9_tl.update(list(self.ds_nen))
-                # Nhặt sao
+                          
                 for s in list(self.ds_sao_map):
                     if self._man9_tl.rect.colliderect(s.rect):
                         self.ds_sao_map.remove(s)
                         self.hud.nhat_sao()
-                # Tới đích
+                          
                 for d in self.ds_dich:
                     if self._man9_tl.rect.colliderect(d.rect):
                         self.da_thang = True
                         self.ket_qua.hien_thang(self.so_man, self._so_sao_thang())
                         break
-            # Camera cố định
+                            
             _w, _h = self.man_hinh.get_size()
             self.camera.cap_nhat_boss(_w, _h)
             self.ds_sao_map.update()
@@ -409,12 +359,17 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         self.nhan_vat.update(tat_ca, chuot_trai_giu=chuot_giu)
         self.ds_nuoc.update()
         self.hieu_ung.update(self.nhan_vat)
+                                                           
+        if (not self.hieu_ung.tan_cong.dang_danh
+                and self.nhan_vat._danh_cd == -1):
+            self.nhan_vat._danh_cd = self.nhan_vat.DANH_CD
 
-        # Đánh F
         if self.so_man == 10:
-            self._b10_f_hit = False   # reset mỗi frame, set lại nếu F trúng boss
+            self._b10_f_hit = False                                              
         if self.nhan_vat._danh_signal:
-            # Nếu đang bị đóng băng → F dùng để phá băng, không đánh quái
+                                                           
+            self.hieu_ung.kich_hoat('bay', thoi_gian=30)
+                                                                         
             if self.hieu_ung.dang_bi_dong_bang:
                 self.hieu_ung.dong_bang.nhan_danh(self.nhan_vat)
             else:
@@ -425,12 +380,12 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                 else:
                     hit = pygame.Rect(self.nhan_vat.rect.left - T2, self.nhan_vat.rect.top,
                                       T2, self.nhan_vat.rect.height)
-                # Hiệu ứng vệt chém 2x2 đè lên vùng đánh
+                                                        
                 self.hieu_ung.tan_cong.kich_hoat(self.nhan_vat.rect, self.nhan_vat.huong)
                 for ke in list(self.ds_ke):
                     if hit.colliderect(ke.rect) and not ke._bien_mat:
                         ke.nhan_don(); break
-                # F đánh trúng boss10 → trừ 1 máu + kích hoạt bị động
+                                                                     
                 if self.so_man == 10:
                     for b in list(self.ds_boss):
                         if hit.colliderect(b.rect) and hasattr(b, 'nhan_don'):
@@ -438,9 +393,9 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                             self._b10_f_hit = True
                             break
 
-        # Kiếm mưa boss10: không thể nhặt (theo thiết kế mới)
+        if self.nhan_vat._dash_signal:
+            self.hieu_ung.kich_hoat('bay', thoi_gian=30)         
 
-        # Ném kiếm
         self._ds_kiem_nem.update(list(self.ds_nen) + list(self.ds_vat))
         if self.nhan_vat._nem_signal:
             cx = self.nhan_vat.rect.centerx
@@ -455,9 +410,7 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                     break
 
         self.tinh_linh.update(self.nhan_vat.rect, list(self.ds_nen) + list(self.ds_vat))
-        self._kiem_tra_cham_T()
 
-        # Camera
         if self.so_man in (5, 9, 10):
             _w, _h = self.man_hinh.get_size()
             self.camera.cap_nhat_boss(_w, _h)
@@ -472,35 +425,10 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         for ke in self.ds_ke:
             ke.update(list(self.ds_nen), player_rect=self.nhan_vat.rect)
 
-        # Quái tấn công player
         if self._i_frames <= 0:
-            for ke in list(self.ds_ke):
-                hit, dx, dy = ke.kiem_tra_tan_cong(self.nhan_vat.rect, self._i_frames)
-                if hit:
-                    if 1 <= self.so_man <= 4:
-                        self.nhan_vat.vel_y = -9
-                        self._i_frames = KeDiChuyen.I_FRAMES
-                        self.so_frame_day = 8
-                        self.huong_day_lui = dx
-                    elif 6 <= self.so_man <= 9:
-                        go = self._mat_mang()
-                        if go: self.ket_qua.hien_thua(self.so_man)
-                        else:
-                            self.nhan_vat.vel_y = -9
-                            self._i_frames = KeDiChuyen.I_FRAMES
-                            self.so_frame_day = 8
-                            self.huong_day_lui = dx
-                    break
-
-        if 6 <= self.so_man <= 9 and self._i_frames <= 0:
             for ke in list(self.ds_ke):
                 if ke._dan is not None and ke._dan.cham_nguoi(self.nhan_vat.rect):
                     dan = ke._dan
-                    if hasattr(dan, '_vx'):
-                        huong_day = 1 if dan._vx >= 0 else -1
-                    else:
-                        huong_day = 1 if ke.rect.centerx < self.nhan_vat.rect.centerx else -1
-                    # Tắt đạn
                     if hasattr(dan, '_con_song'):
                         dan._con_song = False
                     elif hasattr(dan, '_alive'):
@@ -508,25 +436,20 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                     else:
                         dan.kill()
                     ke._dan = None
-                    go = self._mat_mang()
-                    if go:
-                        self.ket_qua.hien_thua(self.so_man)
-                    else:
+                    if 1 <= self.so_man <= 4:
                         self._i_frames = KeDiChuyen.I_FRAMES
-                        self.nhan_vat.vel_x  = huong_day * KeDiChuyen.LUC_DAY
-                        self.nhan_vat.vel_y  = -6
-                        self.so_frame_day    = 10
-                        self.huong_day_lui   = huong_day
+                    else:
+                        go = self._mat_mang()
+                        if go:
+                            self.ket_qua.hien_thua(self.so_man)
+                        else:
+                            self._i_frames = KeDiChuyen.I_FRAMES
                     break
-
-        if hasattr(self, 'so_frame_day') and self.so_frame_day > 0:
-            self.so_frame_day -= 1
-            self.nhan_vat.rect.x += self.huong_day_lui * 1
 
         if self._i_frames > 0: self._i_frames -= 1
 
         nen_vat = list(self.ds_nen) + list(self.ds_vat)
-        # Đạn không va chạm với KhoiTanHinh (khối tàng hình)
+                                                            
         from the_gioi.nen_tang import KhoiTanHinh
         nen_vat_dac = [n for n in nen_vat if not isinstance(n, KhoiTanHinh)]
         for c in self._ds_cau: c.update(nen_vat_dac)
@@ -535,16 +458,18 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         for dc in self.ds_dc:
             dc.xu_ly_vung(self.nhan_vat.rect)
         self.ds_boss.update()
+                                                                                         
+        for b in self.ds_boss:
+            if hasattr(b, 'ap_dung_vat_ly'):
+                b.ap_dung_vat_ly(self.ds_nen)
         self.ds_sao_map.update()
         self.ds_la.update()
 
-        # ── Gọi logic boss ────────────────────────────────
         if self.so_man == 5:
             self._update_boss5()
         elif self.so_man == 10:
             self._update_boss10()
 
-        # Tinh linh nhặt sao
         if self._dang_la_tinh_linh and self._tl_dieu_khien:
             nhat_tl = pygame.sprite.spritecollide(
                 type('_R', (), {'rect': self._tl_dieu_khien.rect})(),
@@ -555,41 +480,32 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         if self._i_frames <= 0:
             for gai in list(self.ds_roi):
                 if gai.kiem_tra_cham_nguoi(self.nhan_vat.rect):
-                    go = self._mat_mang()
-                    self._hoi_sinh()
-                    if go: self.ket_qua.hien_thua(self.so_man)
-                    else:  self._i_frames = KeDiChuyen.I_FRAMES
+                    self.hieu_ung.kich_hoat('stchuan')
+                    self._i_frames = KeDiChuyen.I_FRAMES
                     break
 
         nhat = pygame.sprite.spritecollide(self.nhan_vat, self.ds_sao_map, True)
         for _ in nhat: self.hud.nhat_sao()
 
-        # Rơi xuống đáy
         if self.nhan_vat.rect.top > len(self.ban_do)*T + 50:
             if self.so_man in (5, 10):
                 self._boss_hien_khoi()
-                go = self._mat_mang()
-                if go: self.ket_qua.hien_thua(self.so_man)
-                else:
-                    self._hoi_sinh()
-                    self._i_frames = 5 * FPS
-            else:
-                game_over = self._mat_mang()
-                if game_over: self.ket_qua.hien_thua(self.so_man)
-                else: self._hoi_sinh()
+            self.hieu_ung.kich_hoat('stchuan')
+
+        go = self.hieu_ung.stchuan.xu_ly(self.hud, self.nhan_vat, self.spawn_pos)
+        if go:
+            if self.so_man in (5, 10):
+                self._boss_hien_khoi()
+            self.ket_qua.hien_thua(self.so_man)
 
         if pygame.sprite.spritecollide(self.nhan_vat, self.ds_dich, False):
             self.da_thang = True
             self.ket_qua.hien_thang(self.so_man, self._so_sao_thang())
 
-    # ══════════════════════════════════════════════════════
-    #  VẼ
-    # ══════════════════════════════════════════════════════
     def ve(self):
         w, h = self.man_hinh.get_size()
         cam  = self.camera
 
-        # ── Màn boss và màn 9: vẽ vào canvas kích thước map → scale zoom out
         if self.la_boss or self.so_man == 9:
             map_w  = int(self.camera.rong_the_gioi)
             map_h  = int(self.camera.cao_the_gioi)
@@ -598,17 +514,17 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                 canvas.fill((0, 0, 0))
             else:
                 canvas.fill((35, 15, 15))
-            # Vẽ tile + vật thể lên canvas
+                                          
             for s in [*self.ds_nen, *self.ds_dich, *self.ds_vat, *self.ds_kiem,
                       *self.ds_ke, *self.ds_sach, *self.ds_dc, *self.ds_roi]:
                 canvas.blit(s.image, s.rect)
             if self.so_man == 9:
-                # Màn 9: sao + tinh linh + bóng tối
+                                                   
                 for s in self.ds_sao_map:
                     canvas.blit(s.image, s.rect)
                 if self._man9_tl:
                     self._man9_tl.ve(canvas, 0, 0)
-                    # Bóng tối tâm = vị trí tinh linh trên canvas
+                                                                 
                     tx  = int(self._man9_tl.rect.centerx)
                     ty9 = int(self._man9_tl.rect.centery)
                     R   = T + T//2
@@ -620,7 +536,7 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                         pygame.draw.circle(dark, (0,0,0,int(245*(rv-R)/12)),
                                            (tx, ty9), rv, 1)
                     canvas.blit(dark, (0, 0))
-                # Scale + HUD đơn giản
+                                      
                 ty_le  = cam.ty_le
                 sw     = int(map_w * ty_le); sh = int(map_h * ty_le)
                 scaled = pygame.transform.scale(canvas, (sw, sh))
@@ -638,7 +554,6 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                 self._ve_canvas_boss(canvas, cam, w, h)
                 return
 
-        # ── Chế độ bình thường ────────────────────────────
         if self.so_man == 9:
             self.man_hinh.fill((0, 0, 0))
         elif self.la_boss:
@@ -659,17 +574,21 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
 
         for n in self.ds_nuoc:
             self.man_hinh.blit(n.image, cam.ap_dung(n))
-        # Lá trang trí — vẽ sau đất, trước nhân vật
+                                                   
         for la in self.ds_la:
             self.man_hinh.blit(la.image, cam.ap_dung(la))
         self.man_hinh.blit(self.nhan_vat.image, cam.ap_dung(self.nhan_vat))
-        # Kiếm cầm tay (ẩn khi di chuyển/leo/đánh)
+                                                             
+        if self.nhan_vat._dash_bat_tu_timer > 0:
+            alpha = int(200 * self.nhan_vat._dash_bat_tu_timer / 30)
+            ghost = self.nhan_vat.image.copy()
+            ghost.set_alpha(alpha)
+            self.man_hinh.blit(ghost, cam.ap_dung(self.nhan_vat))
+                                                  
         self._kiem_cam.ve(self.man_hinh, cam.lech_x, cam.lech_y,
                           self.nhan_vat, self.hieu_ung)
-        # Hiệu ứng xấu — vẽ ngay sau nhân vật
+                                             
         self.hieu_ung.ve(self.man_hinh, cam.lech_x, cam.lech_y, self.nhan_vat)
-
-
 
         if self._dang_la_tinh_linh and self._tl_dieu_khien:
             self._tl_dieu_khien.ve(self.man_hinh, cam.lech_x, cam.lech_y)
@@ -697,6 +616,8 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
             self.man_hinh.blit(kn.image, cam.ap_dung(kn))
         for b in self.ds_boss:
             self.man_hinh.blit(b.image, cam.ap_dung(b))
+            if hasattr(b, 've_vu_khi'):
+                b.ve_vu_khi(self.man_hinh, cam.lech_x, cam.lech_y)
 
         if self.so_man == 5:
             for b in self.ds_boss:
@@ -736,33 +657,32 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         if self.tam_dung: self._ve_pause(w, h)
 
     def _ve_canvas_boss(self, canvas, cam, w, h):
-        """Vẽ toàn bộ nội dung boss lên canvas kích thước map,
-        rồi scale canvas xuống vừa màn hình (zoom out)."""
-        # ── Vẽ nước ──
+
         for n in self.ds_nuoc:
             canvas.blit(n.image, n.rect)
             
-        # ── Lá ──
         for la in self.ds_la:
             canvas.blit(la.image, la.rect)
             
-        # ── Nhân vật ──
         canvas.blit(self.nhan_vat.image, self.nhan_vat.rect)
-        # Kiếm cầm tay (ẩn khi di chuyển/leo/đánh)
+                                  
+        if self.nhan_vat._dash_bat_tu_timer > 0:
+            alpha = int(200 * self.nhan_vat._dash_bat_tu_timer / 30)
+            ghost = self.nhan_vat.image.copy()
+            ghost.set_alpha(alpha)
+            canvas.blit(ghost, self.nhan_vat.rect)
+                                                  
         self._kiem_cam.ve(canvas, 0, 0, self.nhan_vat, self.hieu_ung)
-        # Vẽ hiệu ứng trói chân/bất tử... lên canvas trước khi scale
+                                                                    
         self.hieu_ung.ve(canvas, 0, 0, self.nhan_vat)
 
-        # ── Quả cầu ──
         for c in self._ds_cau:
             canvas.blit(c.image, c.rect)
 
-        # ── Tia bắn SK3 ──
         if hasattr(self, '_ds_tia_ban'):
             for tia in self._ds_tia_ban:
                 canvas.blit(tia.image, tia.rect)
             
-        # ── Kiếm bay/mưa/ném ──
         for k in self._ds_kiem_bay:
             canvas.blit(k.image, k.rect)
         for k in self._ds_kiem_mua:
@@ -770,73 +690,61 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         for kn in self._ds_kiem_nem:
             canvas.blit(kn.image, kn.rect)
             
-        # ── Tinh linh ──
         if self.tinh_linh.hien:
             tl_sx = int(self.tinh_linh.x)
             tl_sy = int(self.tinh_linh.y)
-            from the_gioi.tinh_linh import _get as _tl_get, S as _TL_S
-            canvas.blit(_tl_get(), (tl_sx, tl_sy))
+            canvas.blit(self.tinh_linh.image, (tl_sx, tl_sy))
             
-        # ── Boss ──
         for b in self.ds_boss:
             canvas.blit(b.image, b.rect)
+            if hasattr(b, 've_vu_khi'):
+                b.ve_vu_khi(canvas, 0, 0)
             
-        # ── Sao ──
         for s in self.ds_sao_map:
             canvas.blit(s.image, s.rect)
 
-        # ── Scale canvas → màn hình (letterbox) ──────────
         ty_le   = cam.ty_le
         sw      = int(canvas.get_width()  * ty_le)
         sh      = int(canvas.get_height() * ty_le)
         scaled  = pygame.transform.scale(canvas, (sw, sh))
         
-        # Căn giữa màn hình
         ox = (w - sw) // 2
         oy = (h - sh) // 2
         
-        # Đổ màu nền tối cho vùng viền ngoài (letterbox)
         self.man_hinh.fill((35, 15, 15))
         self.man_hinh.blit(scaled, (max(0, ox), max(0, oy)))
-        
-        # ── Vẽ HUD và UI cố định đè lên màn hình chính (Không bị scale nhỏ theo map) ──
+
         self.hud.ve(self.man_hinh, self.nhan_vat, self)
         self._ve_nut(w)
         
-        # Hiển thị thanh máu hoặc thời gian đếm ngược của Boss ở giữa màn hình
         if self.so_man == 5 and hasattr(self, '_boss_timer'):
             con_lai = max(0, (60 * FPS - self._boss_timer) / FPS)
             self._ve_timer_giua(con_lai, 60, w)
         elif self.so_man == 10 and hasattr(self, '_boss_timer'):
             con_lai = max(0, (120 * FPS - self._boss_timer) / FPS)
             self._ve_timer_giua(con_lai, 120, w)
-            # Vẽ thanh máu boss10 cố định giữa màn hình
+                                                       
             self._ve_thanh_mau_boss10(w, h)
 
-        # Hiển thị cảnh báo cơ chế Boss (ví dụ: Khối biến mất)
         if getattr(self, '_bsk_sk2_active', False):
             sec = max(0, self._bsk_sk2_timer // FPS)
             a   = int(200 + 55 * math.sin(self._bsk_sk2_timer * 0.1))
             fn  = pygame.font.SysFont(FONT_CHINH, 18, bold=True)
-            t   = fn.render(f"⚠ Khối biến mất! ({sec}s)", True, (255, 80, 80))
+            t   = fn.render(f"Khối biến mất! ({sec}s)", True, (255, 80, 80))
             t.set_alpha(a)
             self.man_hinh.blit(t, t.get_rect(center=(w // 2, h - 38)))
 
-        # Vẽ các màn hình thông báo hệ thống đè lên cùng
         self.ket_qua.ve(self.man_hinh)
         self.hoi_thoai.ve(self.man_hinh)
         self.thong_bao.ve(self.man_hinh)
         if self.tam_dung:
             self._ve_pause(w, h)
 
-    # ══════════════════════════════════════════════════════
-    #  NÚT UI
-    # ══════════════════════════════════════════════════════
     NUT_S = 36; NUT_P = 8
 
     def _ve_nut(self, w):
         s = self.NUT_S; p = self.NUT_P
-        # Góc trên PHẢI: pause + mute
+                                     
         self.r_pause = pygame.Rect(w-s-p, p, s, s)
         self.r_mute  = pygame.Rect(w-2*s-2*p, p, s, s)
         for r in [self.r_pause, self.r_mute]:
@@ -857,9 +765,8 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                 [(cx2-10,cy2-5),(cx2-2,cy2-5),(cx2+8,cy2-12),(cx2+8,cy2+12),(cx2-2,cy2+5),(cx2-10,cy2+5)])
             pygame.draw.line(self.man_hinh, DO, (cx2+2,cy2-10), (cx2+14,cy2+10), 3)
 
-
     def _ve_thanh_mau_boss10(self, w, h):
-        """Vẽ thanh máu boss10 cố định giữa màn hình (phía trên)."""
+
         b = next(iter(self.ds_boss), None)
         if not b or b.da_chet():
             return
@@ -869,25 +776,24 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
         BW = min(400, w - 80)
         BH = 16
         bx = w // 2 - BW // 2
-        by = 38   # bên dưới timer
+        by = 65                   
 
-        # Nền
         pygame.draw.rect(self.man_hinh, (40, 10, 10), (bx, by, BW, BH), border_radius=6)
-        # Thanh máu
+                   
         tl = b.mau / b.SO_MAU_MAX
         fw = int(BW * tl)
         if fw > 0:
             pygame.draw.rect(self.man_hinh, (200, 30, 30), (bx, by, fw, BH), border_radius=6)
-        # Vạch chia HP
+                      
         for i in range(1, b.SO_MAU_MAX):
             vx = bx + int(BW * i / b.SO_MAU_MAX)
             pygame.draw.line(self.man_hinh, (0, 0, 0), (vx, by), (vx, by + BH), 2)
-        # Viền
+              
         pygame.draw.rect(self.man_hinh, (220, 150, 150), (bx, by, BW, BH), 1, border_radius=6)
-        # Text
+              
         phase_str = f" [Phase {b._phase}]" if hasattr(b, '_phase') else ""
         t = self._fn_boss_mau.render(f"BOSS  {b.mau} / {b.SO_MAU_MAX}{phase_str}", True, TRANG)
-        self.man_hinh.blit(t, t.get_rect(center=(w // 2, by - 10)))
+        self.man_hinh.blit(t, t.get_rect(center=(w // 2, by - 12)))
 
     def _ve_timer_giua(self, con_lai, tong, w):
         if not hasattr(self, '_fn_timer'):
@@ -952,9 +858,6 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
             chu = self.fm.render(nhan, True, (25,25,25) if i==self.muc_pause else TRANG)
             self.man_hinh.blit(chu, chu.get_rect(center=r.center))
 
-    # ══════════════════════════════════════════════════════
-    #  XỬ LÝ SỰ KIỆN
-    # ══════════════════════════════════════════════════════
     def xu_ly_su_kien(self, ev):
         if self.video.hien: self.video.xu_ly(ev); return TRANG_THAI_CHOI
 
@@ -965,8 +868,8 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                     self.thong_bao.hien(nd, tieu_de=td)
                 else:
                     self.thong_bao.hien(
-                        "Nhan nhay 2 lan de bay! Ton tai 3 giay.",
-                        tieu_de="Ky nang moi: Bay")
+                        "Nhấn nhảy 2 lần để giữ trên không.",
+                        tieu_de="Kỹ năng mới: Nhảy cao.")
             return TRANG_THAI_CHOI
 
         if self.hoi_thoai.dang_hien:
@@ -1028,23 +931,7 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                         self._teleport(dest[0], dest[1])
                     elif ket_qua == 'khong':
                         dc.tra_loi_khong()
-                if self.tinh_linh.hien:
-                    cam = self.camera
-                    if cam.ty_le < 1.0:
-                        # Màn boss/9: có zoom — đổi tọa độ screen → world
-                        mw, mh = self.man_hinh.get_size()
-                        sw = int(cam.rong_the_gioi * cam.ty_le)
-                        sh = int(cam.cao_the_gioi  * cam.ty_le)
-                        ox = (mw - sw) // 2
-                        oy = (mh - sh) // 2
-                        wx = (ev.pos[0] - max(0, ox)) / cam.ty_le
-                        wy = (ev.pos[1] - max(0, oy)) / cam.ty_le
-                    else:
-                        # Bình thường
-                        wx = ev.pos[0] + cam.lech_x
-                        wy = ev.pos[1] + cam.lech_y
-                    self.tinh_linh.xu_ly_click(wx, wy)
-            # Nút mute (góc trên phải, bên trái pause)
+                                                      
             if hasattr(self, "r_mute") and self.r_mute.collidepoint(ev.pos):
                 am = getattr(self, 'am_thanh', None)
                 if am:
@@ -1052,7 +939,7 @@ class ManChoi(Boss5LogicMixin, Boss10LogicMixin):
                     if not am._tat:
                         am.choi_nhac(getattr(self, '_nhac_key', 'man_1_4'))
                 return TRANG_THAI_CHOI
-            # Nút pause (góc trên phải)
+                                       
             if hasattr(self, "r_pause") and self.r_pause.collidepoint(ev.pos):
                 self.tam_dung = not self.tam_dung; self.muc_pause = 0
                 return TRANG_THAI_CHOI

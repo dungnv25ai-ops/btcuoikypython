@@ -1,4 +1,4 @@
-# the_gioi/nhan_vat.py
+                      
 import pygame
 import os as _os
 from cai_dat import *
@@ -8,7 +8,6 @@ H_NV = TILE_SIZE * 2
 
 _THU_MUC_GD = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
 
-# ── Cache ảnh di chuyển (30 ảnh, gốc=trái, flip=phải) ───
 _CACHE_DC   = []
 _CACHE_DC_F = []
 
@@ -18,7 +17,7 @@ def _load_anh_di_chuyen():
         return _CACHE_DC, _CACHE_DC_F
     thu_muc = _os.path.join(_THU_MUC_GD, 'tai_nguyen', 'hinh_anh', 'nhan_vat', 'di_chuyen')
 
-    new_w = None  # chiều rộng tính theo tỉ lệ ảnh đầu tiên, áp dụng cho cả 30 frame
+    new_w = None                                                                    
     for i in range(1, 31):
         path = _os.path.join(thu_muc, f"{i}.png")
         if not _os.path.isfile(path): break
@@ -34,8 +33,6 @@ def _load_anh_di_chuyen():
             pass
     return _CACHE_DC, _CACHE_DC_F
 
-
-# ── Fallback ─────────────────────────────────────────────
 def _ve():
     s = pygame.Surface((W_NV, H_NV), pygame.SRCALPHA)
     pygame.draw.rect(s,(45,95,195),(4,10,W_NV-8,H_NV-10),border_radius=5)
@@ -56,28 +53,23 @@ def _sprites():
         _SP = _ve(); _ST = pygame.transform.flip(_SP, True, False)
     return _SP, _ST
 
-
-# ══════════════════════════════════════════════════════════
-#  NHÂN VẬT
-# ══════════════════════════════════════════════════════════
 class NhanVat(pygame.sprite.Sprite):
     W, H = W_NV, H_NV
 
     DASH_TOC_DO   = 10
-    DASH_FRAMES   = 12
-    DASH_COOLDOWN = 45
+    DASH_FRAMES   = 15           
+    DASH_COOLDOWN = 120                                   
 
-    # Di chuyển + leo: dùng chung 30 ảnh, 30fps → mỗi ảnh 2 frame game
     _DC_SPD = 2
     _DC_N   = 30
-    _DC_MID = 14   # index 0-based của ảnh 15
+    _DC_MID = 14                             
 
     def __init__(self, x, y):
         super().__init__()
-        # Load ảnh ngay — dùng ảnh 1 (đứng yên) làm frame mặc định
+                                                                  
         anh_dc, anh_dc_f = _load_anh_di_chuyen()
         if anh_dc:
-            self.image = anh_dc_f[0]   # index 0 = ảnh 1, hướng phải (flip)
+            self.image = anh_dc_f[0]                                       
         else:
             sp, _ = _sprites()
             self.image = sp
@@ -94,6 +86,8 @@ class NhanVat(pygame.sprite.Sprite):
         self._dash_frames = 0
         self._dash_dir    = 1
         self._dash_cd     = 0
+        self._dash_signal = False
+        self._dash_bat_tu_timer = 0                                               
 
         self.co_the_leo_phai = False
         self.co_the_leo_trai = False
@@ -114,19 +108,18 @@ class NhanVat(pygame.sprite.Sprite):
         self._bay_cd     = 0
         self._jump_count = 0
         self._jump_cd    = 0
-        self.BAY_TIME    = 3 * FPS
+        self.BAY_TIME    = 1 * FPS
         self.BAY_CD      = 1 * FPS
         self.JUMP_WINDOW = 18
 
         self._khoa_hieu_ung  = False
         self._khoa_dong_bang = False
 
-        # Animation di chuyển (dùng chung cho cả leo)
-        self._dc_idx               = 0     # index ảnh hiện tại (0-based)
-        self._dc_dem               = 0     # đếm frame game
-        self._dc_lui               = True  # True=30→15, False=15→30
-        self._dc_huong             = 1     # hướng hiện tại của animation
-        self._dc_doi_huong_pending = False # đang chờ về ảnh 15 để đổi hướng
+        self._dc_idx               = 0                                   
+        self._dc_dem               = 0                     
+        self._dc_lui               = True                           
+        self._dc_huong             = 1                                   
+        self._dc_doi_huong_pending = False                                  
 
     def khoa(self, v): self._khoa = v
 
@@ -149,53 +142,37 @@ class NhanVat(pygame.sprite.Sprite):
         self.co_the_leo_phai = self._co_khoi_canh(ds, True)
         self.co_the_leo_trai = self._co_khoi_canh(ds, False)
 
-    # ══════════════════════════════════════════════════════
-    #  ANIMATION
-    # ══════════════════════════════════════════════════════
     def _cap_nhat_anim(self, dang_di, huong_di):
-        """
-        dang_di  : True nếu đang di chuyển (kể cả leo tường)
-        huong_di : 1 (phải) hoặc -1 (trái)
-        Logic ping-pong: 30→15→30→15... khi di chuyển/leo
-        Đứng yên: lùi dần về ảnh 1
-        Đổi hướng: chạy về ảnh 15 trước rồi mới flip
-        """
+                                                           
+        if self.dang_dash:
+            return
+
         anh_dc, anh_dc_f = _load_anh_di_chuyen()
         N   = min(self._DC_N, len(anh_dc)) if anh_dc else 0
         MID = self._DC_MID
 
         if dang_di:
-            # Phát hiện đổi hướng
-            if huong_di != self._dc_huong and not self._dc_doi_huong_pending:
-                self._dc_doi_huong_pending = True
+                                                        
+            if huong_di != self._dc_huong:
+                self._dc_huong             = huong_di
+                self._dc_doi_huong_pending = False
 
             self._dc_dem += 1
             if self._dc_dem >= self._DC_SPD:
                 self._dc_dem = 0
-                if self._dc_doi_huong_pending:
-                    # Chạy về ảnh 15
-                    if self._dc_idx > MID:
-                        self._dc_idx -= 1
-                    elif self._dc_idx < MID:
-                        self._dc_idx += 1
-                    if self._dc_idx == MID:
-                        self._dc_huong             = huong_di
-                        self._dc_doi_huong_pending = False
-                        self._dc_lui               = True
+                                       
+                if self._dc_lui:
+                    self._dc_idx -= 1
+                    if self._dc_idx <= MID:
+                        self._dc_idx = MID
+                        self._dc_lui = False
                 else:
-                    # Ping-pong bình thường
-                    if self._dc_lui:
-                        self._dc_idx -= 1
-                        if self._dc_idx <= MID:
-                            self._dc_idx = MID
-                            self._dc_lui = False
-                    else:
-                        self._dc_idx += 1
-                        if N > 0 and self._dc_idx >= N - 1:
-                            self._dc_idx = N - 1
-                            self._dc_lui = True
+                    self._dc_idx += 1
+                    if N > 0 and self._dc_idx >= N - 1:
+                        self._dc_idx = N - 1
+                        self._dc_lui = True
         else:
-            # Đứng yên: lùi về ảnh 1
+                                    
             self._dc_dem += 1
             if self._dc_dem >= self._DC_SPD:
                 self._dc_dem = 0
@@ -203,7 +180,6 @@ class NhanVat(pygame.sprite.Sprite):
                     self._dc_idx -= 1
             self._dc_doi_huong_pending = False
 
-        # Vẽ ảnh
         if N > 0:
             idx = max(0, min(self._dc_idx, N - 1))
             self.image = anh_dc[idx] if self._dc_huong == -1 else anh_dc_f[idx]
@@ -211,12 +187,10 @@ class NhanVat(pygame.sprite.Sprite):
             sp_p, sp_t = _sprites()
             self.image = sp_p if self.huong == 1 else sp_t
 
-    # ══════════════════════════════════════════════════════
-    #  XỬ LÝ PHÍM
-    # ══════════════════════════════════════════════════════
     def xu_ly_phim(self, ds, chuot_giu):
         if self._khoa:
             self.vel_x = 0; self._leo_huong = 0; return
+        self._dash_signal = False                    
         if self._khoa_hieu_ung:
             self.vel_x        = 0
             self.vel_y        = 0
@@ -271,14 +245,17 @@ class NhanVat(pygame.sprite.Sprite):
             if self._bay_timer <= 0:
                 self._bay_active = False
                 self._bay_cd     = self.BAY_CD
+                                                                            
             self.vel_y = 0; self.vel_x = 0; self._leo_huong = 0
-            if muon_trai: self.vel_x = -TOC_DO_CHAY; self.huong = -1
-            if muon_phai: self.vel_x =  TOC_DO_CHAY; self.huong =  1
+                                            
+            if muon_phai: self.huong = 1
+            if muon_trai: self.huong = -1
             if self.co_dash and self._dash_cd <= 0 and p[pygame.K_e]:
                 self._dash_dir    = self.huong
                 self._dash_frames = self.DASH_FRAMES
-                self._dash_cd     = self.DASH_COOLDOWN
+                self._dash_cd     = self.DASH_COOLDOWN                      
                 self.vel_y        = 0
+                self._dash_signal = True
             return
 
         muon_leo = p[pygame.K_w] or p[pygame.K_SPACE]
@@ -315,14 +292,18 @@ class NhanVat(pygame.sprite.Sprite):
         if self.co_dash and self._dash_cd <= 0 and p[pygame.K_e]:
             self._dash_dir    = self.huong
             self._dash_frames = self.DASH_FRAMES
-            self._dash_cd     = self.DASH_COOLDOWN
+            self._dash_cd     = self.DASH_COOLDOWN                               
             self.vel_y        = 0
+            self._dash_signal = True
 
         self._danh_signal = False; self._nem_signal = False
         if self._danh_cd > 0: self._danh_cd -= 1
+                                                                 
+        khoa_f = self._bay_active or getattr(self, '_khoa_f_bay', False)
         if p[pygame.K_f] and not hasattr(self, '_f_held'):
-            if self.co_danh and self._danh_cd <= 0:
-                self._danh_signal = True; self._danh_cd = self.DANH_CD
+            if self.co_danh and self._danh_cd <= 0 and not khoa_f:
+                self._danh_signal = True
+                self._danh_cd     = -1
         if p[pygame.K_f]: self._f_held = True
         else:
             if hasattr(self, '_f_held'): del self._f_held
@@ -377,11 +358,14 @@ class NhanVat(pygame.sprite.Sprite):
 
     def update(self, ds, chuot_trai_giu=False):
         if self._dash_cd > 0: self._dash_cd -= 1
+        if self._dash_bat_tu_timer > 0: self._dash_bat_tu_timer -= 1
+        _truoc_dash = self.dang_dash
         self.xu_ly_phim(ds, chuot_trai_giu)
+        if self._dash_signal:
+            self._dash_bat_tu_timer = 30
         self.ap_trong_luc()
         self.di_chuyen(ds)
 
-        # Leo tường cũng tính là "đang di chuyển" cho animation
         dang_di = ((self.vel_x != 0 or self.dang_leo)
                    and not self.dang_dash
                    and not self._khoa_hieu_ung
