@@ -92,5 +92,5 @@ my_game/
 ## Tính năng sắp thêm
 
 - [ ] Nhiều màn chơi
-- [ ] Cập nhập âm thanh thanh và hình ảnh
+- [ ] Cập nhập âm thanh và hình ảnh
 
